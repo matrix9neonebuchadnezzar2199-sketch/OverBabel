@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package overbabel.audio;
+
+// Phase 6: loopback capture, VAD, ASR, and translation.
+
+service AudioService {
+  rpc Ping(PingRequest) returns (PingReply);
+}
+
+message PingRequest {}
+
+message PingReply {
+  bool ok = 1;
+}

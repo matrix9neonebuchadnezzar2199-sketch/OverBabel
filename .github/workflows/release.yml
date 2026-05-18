@@ -1,0 +1,19 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Git tag to build (e.g. v0.1.0)"
+        required: true
+        type: string
+
+jobs:
+  placeholder:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Placeholder
+        run: |
+          echo "PyInstaller release pipeline will be wired in Phase 7."
+          echo "Requested tag: ${{ github.event.inputs.tag }}"
