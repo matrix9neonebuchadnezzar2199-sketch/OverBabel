@@ -18,6 +18,12 @@ class OverlaySettings(BaseModel):
     text_color: str = "#ffffff"
 
 
+class HotkeySettings(BaseModel):
+    """Global hotkey bindings (pynput `GlobalHotKeys` format)."""
+
+    toggle_overlay: str = "<ctrl>+<alt>+t"
+
+
 class OverBabelConfig(BaseModel):
     """Top-level application configuration (Phase 0 minimal subset)."""
 
@@ -26,3 +32,4 @@ class OverBabelConfig(BaseModel):
     source_language: str = "en"
     target_language: str = "ja"
     overlay: OverlaySettings = Field(default_factory=OverlaySettings)
+    hotkey: HotkeySettings = Field(default_factory=HotkeySettings)
