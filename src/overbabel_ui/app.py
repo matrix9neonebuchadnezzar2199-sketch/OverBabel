@@ -237,15 +237,18 @@ class OverBabelApp(QObject):
         self._refresh_overlay_labels()
 
     def _run_startup_flow(self) -> bool:
+        dirty = False
         if self._config.welcome.show_on_startup or not self._config.onboarding.completed:
             dlg = WelcomeDialog(self._config)
             if dlg.exec() != int(QDialog.DialogCode.Accepted):
                 return False
             dlg.apply(self._config)
-            save_config(self._config)
+            dirty = True
         if needs_region_pick(self._config):
             if not self._pick_capture_region():
                 return False
+            dirty = True
+        if dirty:
             save_config(self._config)
         return True
 
@@ -260,6 +263,11 @@ class OverBabelApp(QObject):
             return False
         region = picker.region()
         if region is None:
+            QMessageBox.warning(
+                None,
+                "OverBabel",
+                "範囲を保存できませんでした。もう一度ドラッグして囲んでください。",
+            )
             return False
         write_region_to_settings(self._config.capture.region, region)
         self._log.info(
@@ -279,7 +287,7 @@ class OverBabelApp(QObject):
         dlg.apply(self._config)
         if needs_region_pick(self._config) and not self._pick_capture_region():
             return
-        save_config(self._config)
+        save_config(self._config)  # includes region when re-picked
         QMessageBox.information(
             None,
             "OverBabel",

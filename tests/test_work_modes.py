@@ -18,7 +18,7 @@ def test_apply_text_region_with_audio() -> None:
     cfg = OverBabelConfig()
     apply_work_preferences(cfg, "text_region", audio=True)
     assert cfg.text_scope == "text_region"
-    assert cfg.capture.region.enabled is True
+    assert cfg.capture.region.enabled is False  # until region picker completes
     assert cfg.audio.enabled is True
     assert cfg.capture.enabled is True
 

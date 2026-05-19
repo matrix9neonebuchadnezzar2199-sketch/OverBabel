@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from overbabel_core.config.region_util import region_from_settings
 from overbabel_core.config.schema import OverBabelConfig, TextScopeId
 
 
@@ -27,7 +28,9 @@ def apply_work_preferences(
         cap.fps_cap = 12
         cap.min_roi_area = 1200
         cap.max_rois_per_frame = 8
-        cap.region.enabled = True
+        # 範囲は RegionPicker 完了まで enabled にしない（w/h=0 で毎回ピッカーになるのを防ぐ）
+        if region_from_settings(cap.region) is None:
+            cap.region.enabled = False
     _apply_quiet_tuning(config)
 
 

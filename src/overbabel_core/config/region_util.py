@@ -5,9 +5,12 @@ from __future__ import annotations
 from overbabel_core.config.schema import CaptureRegionSettings, OverBabelConfig
 from overbabel_core.roi import RegionOfInterest
 
+_MIN_W = 80
+_MIN_H = 48
+
 
 def region_from_settings(settings: CaptureRegionSettings) -> RegionOfInterest | None:
-    if not settings.enabled or settings.w < 80 or settings.h < 48:
+    if settings.w < _MIN_W or settings.h < _MIN_H:
         return None
     return RegionOfInterest(settings.x, settings.y, settings.w, settings.h)
 
