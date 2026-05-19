@@ -62,6 +62,11 @@ class OverBabelApp(QObject):
         if not self._run_startup_flow():
             self._aborted = True
             return
+        if self._config.text_scope == "text_region" and active_capture_region(self._config) is None:
+            if not self._pick_capture_region():
+                self._aborted = True
+                return
+            save_config(self._config)
 
         # 音声だけ gRPC。画面テキスト OCR は通常どおりインライン（--use-grpc 時のみ vision gRPC）。
         self._use_grpc_vision = use_grpc
@@ -70,6 +75,7 @@ class OverBabelApp(QObject):
             debug_boxes=debug_boxes and not live,
             live_mode=live,
         )
+        self._overlay.set_capture_region_hint(active_capture_region(self._config))
         self._tray = OverBabelTray(parent=self)
         self._tray.set_settings_enabled(True)
         self._hotkeys = HotkeyManager(
@@ -96,6 +102,7 @@ class OverBabelApp(QObject):
         self._tray.toggle_overlay_requested.connect(self.request_toggle_overlay)
         self._tray.settings_requested.connect(self._open_settings)
         self._tray.mode_change_requested.connect(self._open_welcome_menu)
+        self._tray.region_pick_requested.connect(self._repick_capture_region)
         self._tray.quit_requested.connect(self.quit)
 
         signal.signal(signal.SIGINT, lambda *_: self.quit())
@@ -140,12 +147,22 @@ class OverBabelApp(QObject):
             cache_size=self._config.performance.cache_size,
         )
 
-        show_raw = (
-            self._debug_raw_rois
-            or self._config.preview.show_roi_boxes
-            or self._config.overlay.show_roi_boxes
+        show_raw = self._debug_raw_rois or (
+            (self._config.preview.show_roi_boxes or self._config.overlay.show_roi_boxes)
+            and self._config.text_scope != "text_region"
         )
         capture_region = active_capture_region(self._config)
+        if self._config.text_scope == "text_region" and capture_region is None:
+            self._log.error("vision.region_missing", hint="② requires a capture region")
+            return
+        if capture_region is not None:
+            self._log.info(
+                "vision.region_active",
+                x=capture_region.x,
+                y=capture_region.y,
+                w=capture_region.w,
+                h=capture_region.h,
+            )
 
         def _process_rois(frame, rois):
             return processor.process(
@@ -162,6 +179,7 @@ class OverBabelApp(QObject):
             min_roi_area=self._config.capture.min_roi_area,
             max_rois_per_frame=self._config.capture.max_rois_per_frame,
             process_rois=None if show_raw else _process_rois,
+            capture_region=capture_region,
         )
         idle_fps = (
             self._config.performance.idle_fps_cap
@@ -280,6 +298,46 @@ class OverBabelApp(QObject):
         return True
 
     @pyqtSlot()
+    def _repick_capture_region(self) -> None:
+        if self._config.text_scope != "text_region":
+            QMessageBox.information(
+                None,
+                "OverBabel",
+                "範囲の再指定はモード②のときだけ使えます。",
+            )
+            return
+        if not self._pick_capture_region():
+            return
+        save_config(self._config)
+        self._overlay.set_capture_region_hint(active_capture_region(self._config))
+        self._restart_vision_pipeline()
+        self._tray.show_message("OverBabel", "範囲を更新しました。")
+
+    def _stop_vision_worker(self) -> None:
+        if self._vision_worker is None:
+            return
+        try:
+            self._vision_worker.labels_updated.disconnect(self._on_vision_labels)
+        except (TypeError, RuntimeError):
+            pass
+        try:
+            self._vision_worker.rois_updated.disconnect(self._overlay.set_rois)
+        except (TypeError, RuntimeError):
+            pass
+        self._vision_worker.stop()
+        self._vision_worker.wait(3000)
+        self._vision_worker = None
+
+    def _restart_vision_pipeline(self) -> None:
+        self._stop_vision_worker()
+        self._label_stabilizer = LabelStabilizer(hold_seconds=1.5, min_hits=2, max_visible=6)
+        live = self._live_capture and (self._config.capture.enabled or self._debug_boxes)
+        if live and not self._use_grpc_vision:
+            self._start_inline_vision()
+            if self._vision_worker is not None:
+                self._vision_worker.start()
+
+    @pyqtSlot()
     def _open_welcome_menu(self) -> None:
         dlg = WelcomeDialog(self._config)
         if dlg.exec() != int(QDialog.DialogCode.Accepted):
@@ -325,9 +383,7 @@ class OverBabelApp(QObject):
     def _stop_workers(self) -> None:
         self._hotkeys.stop()
         self._label_paint_timer.stop()
-        if self._vision_worker is not None:
-            self._vision_worker.stop()
-            self._vision_worker.wait(3000)
+        self._stop_vision_worker()
         if self._vision_grpc is not None:
             self._vision_grpc.stop()
             self._vision_grpc.wait(3000)

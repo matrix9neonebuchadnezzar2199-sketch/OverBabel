@@ -39,8 +39,10 @@ class VisionPipeline:
         on_rois: Callable[[list[RegionOfInterest], np.ndarray], None] | None = None,
         on_labels: Callable[[list[OverlayLabel]], None] | None = None,
         process_rois: Callable[[np.ndarray, list[RegionOfInterest]], list[OverlayLabel]] | None = None,
+        capture_region: RegionOfInterest | None = None,
     ) -> None:
         self._capture = capture
+        self._capture_region = capture_region
         self._differ = FrameDiffer(threshold=diff_threshold, min_area=min_roi_area)
         self._max_rois = max_rois_per_frame
         self._on_rois = on_rois
@@ -62,13 +64,33 @@ class VisionPipeline:
     def has_ocr_pipeline(self) -> bool:
         return self._process_rois is not None
 
+    def _crop_to_region(
+        self, frame: np.ndarray, region: RegionOfInterest
+    ) -> tuple[np.ndarray, int, int]:
+        fh, fw = frame.shape[:2]
+        x1 = max(0, min(region.x, fw - 1))
+        y1 = max(0, min(region.y, fh - 1))
+        x2 = max(x1 + 1, min(region.x + region.w, fw))
+        y2 = max(y1 + 1, min(region.y + region.h, fh))
+        return frame[y1:y2, x1:x2], x1, y1
+
     def tick(self) -> bool:
         """Process one frame (call from worker thread). Returns True if OCR/ROI work ran."""
         frame = self._capture.grab()
         if frame is None:
             return False
         self._frame_count += 1
-        rois = self._differ.update(frame)
+        offset_x, offset_y = 0, 0
+        work = frame
+        if self._capture_region is not None:
+            work, offset_x, offset_y = self._crop_to_region(frame, self._capture_region)
+            if work.size == 0:
+                return False
+        rois = self._differ.update(work)
+        if offset_x or offset_y:
+            rois = [
+                RegionOfInterest(r.x + offset_x, r.y + offset_y, r.w, r.h) for r in rois
+            ]
         if len(rois) > self._max_rois:
             rois = sorted(rois, key=lambda r: r.area, reverse=True)[: self._max_rois]
         if not rois:

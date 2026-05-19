@@ -14,6 +14,7 @@ class OverBabelTray(QObject):
     toggle_overlay_requested = pyqtSignal()
     settings_requested = pyqtSignal()
     mode_change_requested = pyqtSignal()
+    region_pick_requested = pyqtSignal()
     quit_requested = pyqtSignal()
 
     def __init__(self, parent: QObject | None = None) -> None:
@@ -34,6 +35,10 @@ class OverBabelTray(QObject):
         self._act_mode = QAction("モードを変更…", self._menu)
         self._act_mode.triggered.connect(self.mode_change_requested.emit)
         self._menu.addAction(self._act_mode)
+
+        self._act_region = QAction("範囲を再指定…", self._menu)
+        self._act_region.triggered.connect(self.region_pick_requested.emit)
+        self._menu.addAction(self._act_region)
 
         self._menu.addSeparator()
 

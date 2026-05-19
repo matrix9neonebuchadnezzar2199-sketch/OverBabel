@@ -6,6 +6,7 @@ from PyQt6.QtCore import QPoint, QRect, Qt
 from PyQt6.QtGui import QColor, QGuiApplication, QPainter, QPen
 from PyQt6.QtWidgets import QDialog, QDialogButtonBox, QLabel, QMessageBox, QVBoxLayout, QWidget
 
+from overbabel_core.config.screen_coords import global_rect_to_capture_region
 from overbabel_core.roi import RegionOfInterest
 
 _MIN_W = 80
@@ -102,11 +103,12 @@ class RegionPickerDialog(QDialog):
         root.addWidget(buttons)
 
     def _canvas_rect_to_monitor(self, rect: QRect) -> RegionOfInterest:
-        top_left = self._canvas.mapToGlobal(QPoint(rect.x(), rect.y()))
-        geo = self._monitor_geo
-        x = top_left.x() - geo.x()
-        y = top_left.y() - geo.y()
-        return RegionOfInterest(x, y, rect.width(), rect.height())
+        global_rect = QRect(
+            self._canvas.mapToGlobal(QPoint(rect.x(), rect.y())),
+            rect.size(),
+        )
+        screen = QGuiApplication.primaryScreen()
+        return global_rect_to_capture_region(global_rect, screen)
 
     def _on_ok_clicked(self) -> None:
         rect = self._canvas.selection_rect()

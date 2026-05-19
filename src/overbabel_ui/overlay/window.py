@@ -6,9 +6,11 @@ Phase 1 はダミー描画のみ。Phase 3 以降で OCR / 翻訳の結果を描
 from __future__ import annotations
 
 from PyQt6.QtCore import QRect, Qt
-from PyQt6.QtGui import QGuiApplication, QPainter, QPaintEvent
+from PyQt6.QtGui import QGuiApplication, QPainter, QPaintEvent, QPen
 from PyQt6.QtWidgets import QWidget
 
+from overbabel_core.config.screen_coords import device_pixel_ratio
+from overbabel_core.roi import RegionOfInterest
 from overbabel_core.utils import get_logger
 from overbabel_ui.overlay.debug_layer import DebugSample, draw_debug_layer
 from overbabel_ui.overlay.render import labels_to_samples, rois_to_samples
@@ -32,6 +34,9 @@ class OverlayWindow(QWidget):
         self._debug_boxes = debug_boxes
         self._live_mode = live_mode
         self._samples: list[DebugSample] = []
+        self._region_hint: RegionOfInterest | None = None
+        screen = QGuiApplication.primaryScreen()
+        self._dpr = device_pixel_ratio(screen)
 
         # 透明 + クリックスルー
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
@@ -68,17 +73,46 @@ class OverlayWindow(QWidget):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
         # ベースは完全透明 (何も塗らない)
+        if self._region_hint is not None:
+            painter.setPen(QPen(Qt.GlobalColor.cyan, 2, Qt.PenStyle.DashLine))
+            painter.drawRect(self._phys_to_widget_rect(self._region_hint))
         if self._debug_boxes or self._live_mode:
             samples = self._samples if self._live_mode else self._build_debug_samples()
             if samples:
                 draw_debug_layer(painter, samples)
 
+    def set_capture_region_hint(self, region: RegionOfInterest | None) -> None:
+        self._region_hint = region
+        self.update()
+
+    def _phys_to_widget_rect(self, roi: RegionOfInterest) -> QRect:
+        dpr = self._dpr if self._dpr > 0 else 1.0
+        return QRect(
+            int(roi.x / dpr),
+            int(roi.y / dpr),
+            max(1, int(roi.w / dpr)),
+            max(1, int(roi.h / dpr)),
+        )
+
+    def _samples_to_widget(self, samples: list[DebugSample]) -> list[DebugSample]:
+        out: list[DebugSample] = []
+        for s in samples:
+            r = s.rect
+            phys = RegionOfInterest(r.x(), r.y(), r.width(), r.height())
+            wr = self._phys_to_widget_rect(phys)
+            out.append(DebugSample(tag=s.tag, text=s.text, rect=wr, accent=s.accent))
+        return out
+
     def set_rois(self, rois: list[object]) -> None:
-        self._samples = rois_to_samples(rois)
+        from overbabel_core.roi import RegionOfInterest as R
+
+        typed = [r for r in rois if isinstance(r, R)]
+        self._samples = self._samples_to_widget(rois_to_samples(typed))
         self.update()
 
     def set_labels(self, labels: list[object]) -> None:
-        samples = labels_to_samples(labels)
+        samples = labels_to_samples(labels)  # type: ignore[arg-type]
+        samples = self._samples_to_widget(samples)
         if samples == self._samples:
             return
         self._samples = samples
