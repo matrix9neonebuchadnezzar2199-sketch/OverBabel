@@ -154,13 +154,60 @@ class RegionPickerDialog(QDialog):
         self._hint.move(16, 16)
         self._hint.raise_()
 
-        bar = QDialogButtonBox(QDialogButtonBox.StandardButton.Cancel)
+        footer = QWidget()
+        footer.setObjectName("regionPickerFooter")
+        footer.setStyleSheet(
+            """
+            #regionPickerFooter {
+                background-color: rgba(20, 24, 32, 230);
+                border-top: 1px solid rgba(0, 200, 255, 120);
+            }
+            QPushButton {
+                min-height: 36px;
+                min-width: 120px;
+                padding: 8px 20px;
+                font-size: 14px;
+                font-weight: bold;
+                border-radius: 6px;
+            }
+            QPushButton#btnConfirm {
+                background-color: #0d9bd8;
+                color: white;
+                border: 1px solid #5ed4ff;
+            }
+            QPushButton#btnConfirm:hover:enabled {
+                background-color: #12b0f0;
+            }
+            QPushButton#btnConfirm:disabled {
+                background-color: #3a4555;
+                color: #8899aa;
+                border: 1px solid #556677;
+            }
+            QPushButton#btnCancel {
+                background-color: #3a3f4a;
+                color: #e8e8e8;
+                border: 1px solid #666;
+            }
+            QPushButton#btnCancel:hover {
+                background-color: #4d5360;
+            }
+            """
+        )
+        footer_layout = QVBoxLayout(footer)
+        footer_layout.setContentsMargins(16, 12, 16, 16)
+
+        bar = QDialogButtonBox()
         self._btn_confirm = QPushButton("範囲を決定")
+        self._btn_confirm.setObjectName("btnConfirm")
         self._btn_confirm.setEnabled(False)
         self._btn_confirm.clicked.connect(self._on_confirm)
+        btn_cancel = QPushButton("キャンセル")
+        btn_cancel.setObjectName("btnCancel")
+        btn_cancel.clicked.connect(self.reject)
         bar.addButton(self._btn_confirm, QDialogButtonBox.ButtonRole.AcceptRole)
-        bar.rejected.connect(self.reject)
-        root.addWidget(bar)
+        bar.addButton(btn_cancel, QDialogButtonBox.ButtonRole.RejectRole)
+        footer_layout.addWidget(bar)
+        root.addWidget(footer)
 
     @staticmethod
     def _hint_create() -> str:
