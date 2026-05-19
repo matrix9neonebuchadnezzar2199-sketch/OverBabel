@@ -88,4 +88,5 @@ markers = [
     "slow: marks tests as slow",
     "gpu: requires GPU",
     "integration: requires running services",
+    "regression: operational checklist (also run via python test.py)",
 ]

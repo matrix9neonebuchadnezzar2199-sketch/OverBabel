@@ -14,6 +14,9 @@ __all__ = [
     "active_capture_region",
     "needs_region_pick",
     "should_show_region_picker",
+    "should_use_grpc_audio",
+    "should_use_grpc_vision",
+    "should_show_raw_roi_boxes",
 ]
 
 
@@ -36,3 +39,21 @@ def should_show_region_picker(config: OverBabelConfig, *, after_welcome: bool) -
     if after_welcome:
         return True
     return needs_region_pick(config)
+
+
+def should_use_grpc_vision(*, cli_use_grpc: bool) -> bool:
+    """Vision gRPC is opt-in from CLI; audio must not enable it."""
+    return cli_use_grpc
+
+
+def should_use_grpc_audio(config: OverBabelConfig) -> bool:
+    return config.audio.enabled
+
+
+def should_show_raw_roi_boxes(config: OverBabelConfig, *, debug_raw_rois: bool) -> bool:
+    """Mode ② never shows raw diff boxes (full-screen flicker)."""
+    if debug_raw_rois:
+        return True
+    if config.text_scope == "text_region":
+        return False
+    return config.preview.show_roi_boxes or config.overlay.show_roi_boxes

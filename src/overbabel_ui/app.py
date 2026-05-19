@@ -13,7 +13,12 @@ from PyQt6.QtWidgets import QApplication, QDialog, QMessageBox
 from overbabel_core.config.loader import load_config, save_config
 from overbabel_core.config.region_util import active_capture_region, write_region_to_settings
 from overbabel_core.config.screen_coords import widget_rect_to_capture_region
-from overbabel_core.config.user_flow import should_show_region_picker
+from overbabel_core.config.user_flow import (
+    should_show_raw_roi_boxes,
+    should_show_region_picker,
+    should_use_grpc_audio,
+    should_use_grpc_vision,
+)
 from overbabel_core.utils import get_logger, setup_logging
 from overbabel_ui.audio_client import AudioGrpcClient
 from overbabel_ui.hotkey.manager import HotkeyManager
@@ -62,7 +67,7 @@ class OverBabelApp(QObject):
             return
 
         # 音声だけ gRPC。画面テキスト OCR は通常どおりインライン（--use-grpc 時のみ vision gRPC）。
-        self._use_grpc_vision = use_grpc
+        self._use_grpc_vision = should_use_grpc_vision(cli_use_grpc=use_grpc)
         live = live_capture and (self._config.capture.enabled or debug_boxes)
         self._overlay = OverlayWindow(
             debug_boxes=debug_boxes and not live,
@@ -108,7 +113,7 @@ class OverBabelApp(QObject):
         elif live and self._use_grpc_vision:
             self._start_grpc_vision()
 
-        if self._config.audio.enabled:
+        if should_use_grpc_audio(self._config):
             self._start_grpc_audio()
 
     def _start_inline_vision(self) -> None:
@@ -140,10 +145,7 @@ class OverBabelApp(QObject):
             cache_size=self._config.performance.cache_size,
         )
 
-        show_raw = self._debug_raw_rois or (
-            (self._config.preview.show_roi_boxes or self._config.overlay.show_roi_boxes)
-            and self._config.text_scope != "text_region"
-        )
+        show_raw = should_show_raw_roi_boxes(self._config, debug_raw_rois=self._debug_raw_rois)
         capture_region = active_capture_region(self._config)
         if self._config.text_scope == "text_region" and capture_region is None:
             self._log.error("vision.region_missing", hint="② requires a capture region")
