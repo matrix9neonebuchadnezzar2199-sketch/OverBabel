@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>ISSUE-106</title>
+  <link rel="stylesheet" href="../../_shared.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>ISSUE-106 <span class="badge ok">resolved</span></h1>
+  <p><strong>現象:</strong> <code>QWidget: Must construct a QApplication before a QWidget</code> on startup.</p>
+  <p><strong>原因:</strong> <code>OnboardingDialog</code> was constructed before <code>QApplication</code> in <code>OverBabelApp.__init__</code>.</p>
+  <p><strong>対処:</strong> Create <code>QApplication</code> first; show onboarding after. <code>--debug-boxes</code> now disables live capture.</p>
+</div>
+</body>
+</html>

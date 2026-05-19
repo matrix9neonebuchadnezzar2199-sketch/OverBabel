@@ -37,9 +37,11 @@ def main(argv: list[str] | None = None) -> int:
 
     from overbabel_ui.app import run_app
 
+    # --debug-boxes implies mock overlay only (no dxcam pipeline).
+    live = not args.no_capture and not args.debug_boxes
     return run_app(
         debug_boxes=args.debug_boxes,
-        live_capture=not args.no_capture,
+        live_capture=live,
         use_grpc=args.use_grpc,
     )
 

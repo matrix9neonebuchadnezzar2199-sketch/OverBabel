@@ -43,6 +43,12 @@ class OverBabelApp(QObject):
         self._use_grpc = use_grpc
         self._config: OverBabelConfig = load_config()
 
+        # QApplication must exist before any QWidget (onboarding, overlay, tray).
+        self._qapp = QApplication.instance() or QApplication(sys.argv)
+        assert isinstance(self._qapp, QApplication)
+        self._qapp.setQuitOnLastWindowClosed(False)
+        self._qapp.setApplicationName("OverBabel")
+
         if not self._config.onboarding.completed:
             dlg = OnboardingDialog(self._config)
             if dlg.exec():
@@ -50,11 +56,6 @@ class OverBabelApp(QObject):
                 save_config(self._config)
         else:
             save_config(self._config)
-
-        self._qapp = QApplication.instance() or QApplication(sys.argv)
-        assert isinstance(self._qapp, QApplication)
-        self._qapp.setQuitOnLastWindowClosed(False)
-        self._qapp.setApplicationName("OverBabel")
 
         live = live_capture and (self._config.capture.enabled or debug_boxes)
         self._overlay = OverlayWindow(
