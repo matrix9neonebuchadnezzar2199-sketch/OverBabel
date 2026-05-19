@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>セッション記録 2026-05-19</title>
+  <link rel="stylesheet" href="_shared.css">
+</head>
+<body>
+<div class="wrap">
+  <nav class="top"><a href="index.html">← 索引</a> · <a href="issues/index.html">課題</a></nav>
+  <h1>セッション記録 <span class="badge ok">完了</span></h1>
+  <p class="meta">2026-05-19 · main · 範囲指定 UX / AUDIO 表示位置 / 翻訳実装状況の整理</p>
+
+  <h2>実装・修正</h2>
+  <div class="card">
+    <h3>範囲指定（モード②）</h3>
+    <ul>
+      <li>ドラッグで枠固定 → 枠内ドラッグで移動 →「範囲を決定」で確定（<code>region_picker.py</code>）</li>
+      <li>フッターに濃色背景＋「範囲を決定」ボタンを視認しやすくスタイル（<code>cb32a29</code>）</li>
+      <li><code>capture.region.confirmed</code> ゲート、起動時ウェルカム後のピッカー強制、DPI 座標、差分の範囲クロップ（先行コミット群）</li>
+    </ul>
+    <h3>AUDIO 字幕の表示位置</h3>
+    <ul>
+      <li>設定「音声」→ 字幕の表示位置: <strong>上 / 中央 / 下</strong>（<code>audio.subtitle_band</code>）</li>
+      <li>② は指定矩形内、① は画面全体に対して配置（<code>audio_overlay.py</code>）</li>
+      <li>設定保存・範囲再指定・モード変更時に表示中の AUDIO を再配置（<code>ec6cc5e</code>）</li>
+    </ul>
+    <h3>回帰</h3>
+    <ul>
+      <li><code>python test.py</code> / <code>tests/test_audio_overlay.py</code></li>
+    </ul>
+  </div>
+
+  <h2>確認・メモ（翻訳機能）</h2>
+  <div class="card">
+    <table>
+      <thead><tr><th>系統</th><th>状態</th><th>備考</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>画面 OCR → 翻訳</td>
+          <td><span class="badge ok">実装済</span></td>
+          <td><code>VisionProcessor</code> → Opus-MT（<code>transformers</code> 利用可時）。不可時はスタブ（<code>[ja] 原文</code> 等）</td>
+        </tr>
+        <tr>
+          <td>音声 → 翻訳</td>
+          <td><span class="badge bad">デモのみ</span></td>
+          <td><code>overbabel_audio.server</code> が固定英日を 5 秒周期で送出。<a href="issues/open/ISSUE-002-whisper-loopback.html">ISSUE-002</a></td>
+        </tr>
+        <tr>
+          <td>nllb / llm_gguf / winocr / tesseract</td>
+          <td><span class="badge muted">UI のみ</span></td>
+          <td>スキーマ・設定 COMBO に名前あり、エンジン本体は未接続（stub 相当）</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>本番に近い画面翻訳: <code>pip install -e ".[ui,vision,translate]"</code> 後、初回モデル DL。</p>
+  </div>
+
+  <h2>コミット（main）</h2>
+  <pre>ec6cc5e Add configurable top/center/bottom placement for AUDIO subtitles
+cb32a29 Style region picker footer with dark bar and visible confirm button
+473b730 Region picker: lock rect after drag, move inside box, confirm button
+…（6ca04d8 以降: ユーザーフロー・範囲確定・test.py 等）</pre>
+
+  <h2>次回以降</h2>
+  <ul>
+    <li><a href="issues/open/ISSUE-002-whisper-loopback.html">ISSUE-002</a> — WASAPI + faster-whisper 本実装</li>
+    <li>翻訳エンジン nllb / 実音声パイプラインとの Translator 共有</li>
+    <li>設定 GUI で <code>text_scope</code> / 範囲の露出（トレイ「モード変更」は実装済）</li>
+  </ul>
+</div>
+</body>
+</html>
