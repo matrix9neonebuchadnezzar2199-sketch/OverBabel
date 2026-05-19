@@ -19,8 +19,10 @@ class VisionWorker(QThread):
         self._running = True
 
     def run(self) -> None:
-        self._pipeline._on_rois = self._emit_rois
-        self._pipeline._on_labels = self._emit_labels
+        if self._pipeline.has_ocr_pipeline:
+            self._pipeline._on_labels = self._emit_labels
+        else:
+            self._pipeline._on_rois = self._emit_rois
         self._pipeline.run_loop(fps_cap=self._fps_cap, until=lambda: not self._running)
 
     def stop(self) -> None:

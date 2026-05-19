@@ -35,12 +35,14 @@ class OverBabelApp(QObject):
         debug_boxes: bool = False,
         live_capture: bool = True,
         use_grpc: bool = False,
+        debug_raw_rois: bool = False,
     ) -> None:
         super().__init__()
         self._log = get_logger("ui.app")
         self._debug_boxes = debug_boxes
         self._live_capture = live_capture
         self._use_grpc = use_grpc
+        self._debug_raw_rois = debug_raw_rois
         self._config: OverBabelConfig = load_config()
 
         # QApplication must exist before any QWidget (onboarding, overlay, tray).
@@ -124,19 +126,30 @@ class OverBabelApp(QObject):
             cache_size=self._config.performance.cache_size,
         )
 
+        show_raw = self._debug_raw_rois or self._config.preview.show_roi_boxes
+
+        def _process_rois(frame, rois):
+            return processor.process(
+                frame,
+                rois,
+                max_rois=self._config.capture.max_rois_per_frame,
+            )
+
         pipeline = VisionPipeline(
             cap,
             diff_threshold=self._config.capture.diff_threshold,
             min_roi_area=self._config.capture.min_roi_area,
-            process_rois=processor.process,
+            max_rois_per_frame=self._config.capture.max_rois_per_frame,
+            process_rois=None if show_raw else _process_rois,
         )
         self._vision_worker = VisionWorker(
             pipeline,
             fps_cap=self._config.capture.fps_cap,
         )
-        self._vision_worker.labels_updated.connect(self._overlay.set_labels)
-        if self._config.preview.show_roi_boxes:
+        if show_raw:
             self._vision_worker.rois_updated.connect(self._overlay.set_rois)
+        else:
+            self._vision_worker.labels_updated.connect(self._overlay.set_labels)
 
     def _start_grpc_vision(self) -> None:
         self._vision_proc.start("overbabel_vision.server")
@@ -234,6 +247,7 @@ def run_app(
     debug_boxes: bool = False,
     live_capture: bool = True,
     use_grpc: bool = False,
+    debug_raw_rois: bool = False,
 ) -> int:
     setup_logging()
     QApplication.setHighDpiScaleFactorRoundingPolicy(Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)
@@ -241,5 +255,6 @@ def run_app(
         debug_boxes=debug_boxes,
         live_capture=live_capture,
         use_grpc=use_grpc,
+        debug_raw_rois=debug_raw_rois,
     )
     return app.run()

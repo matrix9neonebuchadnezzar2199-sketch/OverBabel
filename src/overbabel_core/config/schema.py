@@ -14,8 +14,9 @@ TranslateEngineId = Literal["opus_mt", "nllb", "llm_gguf", "stub"]
 class CaptureSettings(BaseModel):
     enabled: bool = True
     fps_cap: int = Field(default=30, ge=1, le=60)
-    diff_threshold: float = Field(default=25.0, ge=1.0, le=255.0)
-    min_roi_area: int = Field(default=400, ge=16)
+    diff_threshold: float = Field(default=30.0, ge=1.0, le=255.0)
+    min_roi_area: int = Field(default=2500, ge=16)
+    max_rois_per_frame: int = Field(default=12, ge=1, le=64)
     monitor_index: int = Field(default=0, ge=0)
 
 
@@ -50,7 +51,7 @@ class OverlaySettings(BaseModel):
 
 
 class PreviewSettings(BaseModel):
-    show_roi_boxes: bool = True
+    show_roi_boxes: bool = False
     log_fps: bool = False
 
 

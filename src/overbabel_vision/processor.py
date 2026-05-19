@@ -27,7 +27,16 @@ class VisionProcessor:
         self._tgt = tgt
         self._cache = TranslationCache(maxsize=cache_size)
 
-    def process(self, frame: np.ndarray, rois: list[RegionOfInterest]) -> list[OverlayLabel]:
+    def process(
+        self,
+        frame: np.ndarray,
+        rois: list[RegionOfInterest],
+        *,
+        max_rois: int = 12,
+    ) -> list[OverlayLabel]:
+        if not rois:
+            return []
+        rois = sorted(rois, key=lambda r: r.area, reverse=True)[:max_rois]
         ocr_results = self._ocr.detect(frame, rois)
         if not ocr_results:
             return []

@@ -25,6 +25,11 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
         action="store_true",
         help="Use vision/audio gRPC child processes.",
     )
+    p.add_argument(
+        "--debug-roi",
+        action="store_true",
+        help="Show raw diff ROIs only (no OCR); like Phase 2 bench.",
+    )
     p.add_argument("--version", action="store_true", help="Print version and exit.")
     return p.parse_args(argv)
 
@@ -43,6 +48,7 @@ def main(argv: list[str] | None = None) -> int:
         debug_boxes=args.debug_boxes,
         live_capture=live,
         use_grpc=args.use_grpc,
+        debug_raw_rois=args.debug_roi,
     )
 
 
