@@ -19,12 +19,12 @@ def apply_work_preferences(
     if text_scope == "text_full":
         cap.subtitle_band_only = False
         cap.fps_cap = 18
-        cap.min_roi_area = 3500
+        cap.min_roi_area = 2500
         cap.max_rois_per_frame = 10
         cap.region.enabled = False
     else:
         cap.subtitle_band_only = False
         cap.fps_cap = 12
-        cap.min_roi_area = 5000
-        cap.max_rois_per_frame = 6
+        cap.min_roi_area = 1200
+        cap.max_rois_per_frame = 8
         cap.region.enabled = True

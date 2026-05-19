@@ -63,7 +63,8 @@ class OverBabelApp(QObject):
             self._aborted = True
             return
 
-        self._use_grpc = use_grpc or self._config.audio.enabled
+        # 音声だけ gRPC。画面テキスト OCR は通常どおりインライン（--use-grpc 時のみ vision gRPC）。
+        self._use_grpc_vision = use_grpc
         live = live_capture and (self._config.capture.enabled or debug_boxes)
         self._overlay = OverlayWindow(
             debug_boxes=debug_boxes and not live,
@@ -84,9 +85,11 @@ class OverBabelApp(QObject):
         self._audio_proc = ManagedProcess("audio")
         self._settings: SettingsWindow | None = None
         self._label_stabilizer = LabelStabilizer(hold_seconds=1.5, min_hits=2, max_visible=6)
+        self._audio_label: object | None = None
+        self._last_audio_text: str = ""
         self._label_paint_timer = QTimer(self)
         self._label_paint_timer.setInterval(250)
-        self._label_paint_timer.timeout.connect(self._refresh_stable_labels)
+        self._label_paint_timer.timeout.connect(self._refresh_overlay_labels)
 
         self.overlay_toggle_requested.connect(self._on_toggle_overlay)
         self._tray.toggle_overlay_requested.connect(self.request_toggle_overlay)
@@ -99,12 +102,12 @@ class OverBabelApp(QObject):
         self._sigint_timer.start(100)
         self._sigint_timer.timeout.connect(lambda: None)
 
-        if live and not self._use_grpc:
+        if live and not self._use_grpc_vision:
             self._start_inline_vision()
-        elif live and self._use_grpc:
+        elif live and self._use_grpc_vision:
             self._start_grpc_vision()
 
-        if self._use_grpc and self._config.audio.enabled:
+        if self._config.audio.enabled:
             self._start_grpc_audio()
 
     def _start_inline_vision(self) -> None:
@@ -182,14 +185,20 @@ class OverBabelApp(QObject):
         self._label_stabilizer.push(typed)
 
     @pyqtSlot()
-    def _refresh_stable_labels(self) -> None:
-        stable = self._label_stabilizer.snapshot()
-        self._overlay.set_labels(stable)
+    def _refresh_overlay_labels(self) -> None:
+        from overbabel_vision.pipeline import OverlayLabel
+
+        combined: list[OverlayLabel] = list(self._label_stabilizer.snapshot())
+        if isinstance(self._audio_label, OverlayLabel):
+            combined.append(self._audio_label)
+        combined.sort(key=lambda lb: lb.roi.y)
+        self._overlay.set_labels(combined)
 
     def _start_grpc_vision(self) -> None:
         self._vision_proc.start("overbabel_vision.server")
         self._vision_grpc = VisionGrpcClient(port=self._config.grpc.vision_port)
-        self._vision_grpc.labels_updated.connect(self._overlay.set_labels)
+        self._vision_grpc.labels_updated.connect(self._on_vision_labels)
+        self._label_paint_timer.start()
 
     def _start_grpc_audio(self) -> None:
         self._audio_proc.start("overbabel_audio.server")
@@ -200,6 +209,11 @@ class OverBabelApp(QObject):
     def _on_audio_subtitle(self, text: str) -> None:
         from overbabel_core.roi import RegionOfInterest
         from overbabel_vision.pipeline import OverlayLabel
+
+        text = text.strip()
+        if not text or text == self._last_audio_text:
+            return
+        self._last_audio_text = text
 
         region = active_capture_region(self._config)
         if region is not None:
@@ -212,8 +226,8 @@ class OverBabelApp(QObject):
         else:
             w, h = self._overlay.width(), self._overlay.height()
             roi = RegionOfInterest(x=int(w * 0.2), y=int(h * 0.9), w=int(w * 0.6), h=48)
-        label = OverlayLabel(tag="AUDIO", text=text, roi=roi, accent=True)
-        self._overlay.set_labels([label])
+        self._audio_label = OverlayLabel(tag="AUDIO", text=text, roi=roi, accent=True)
+        self._refresh_overlay_labels()
 
     def _run_startup_flow(self) -> bool:
         if self._config.welcome.show_on_startup or not self._config.onboarding.completed:
@@ -270,7 +284,7 @@ class OverBabelApp(QObject):
             return 0
         self._log.info(
             "app.start",
-            grpc=self._use_grpc,
+            grpc_vision=self._use_grpc_vision,
             live=self._live_capture,
             text_scope=self._config.text_scope,
             audio=self._config.audio.enabled,

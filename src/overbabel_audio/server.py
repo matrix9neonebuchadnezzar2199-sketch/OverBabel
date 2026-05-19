@@ -29,7 +29,7 @@ def _serve(port: int) -> None:
                 en, ja = demo_lines[idx % len(demo_lines)]
                 idx += 1
                 yield audio_pb2.SubtitleBatch(text=en, translated=ja)
-                time.sleep(3.0)
+                time.sleep(5.0)
 
         def Ping(self, request, context):  # noqa: N802
             return audio_pb2.PingReply(ok=True)
