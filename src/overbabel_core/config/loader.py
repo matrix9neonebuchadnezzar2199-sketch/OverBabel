@@ -12,13 +12,27 @@ from overbabel_core.config.paths import get_config_path
 from overbabel_core.config.schema import OverBabelConfig
 
 
+def _migrate_config_data(data: dict[str, Any]) -> dict[str, Any]:
+    """Map legacy `work_mode` / `audio_region` to `text_scope` + `audio.enabled`."""
+    if "text_scope" not in data:
+        legacy = data.pop("work_mode", None)
+        if legacy == "audio_region":
+            data["text_scope"] = "text_region"
+            audio = data.setdefault("audio", {})
+            if isinstance(audio, dict):
+                audio["enabled"] = True
+        elif legacy in ("text_full", "text_region"):
+            data["text_scope"] = legacy
+    return data
+
+
 def load_config() -> OverBabelConfig:
     """Return configuration from disk, or defaults if the file is missing."""
     path = get_config_path()
     if not path.exists():
         return OverBabelConfig()
     text = path.read_text(encoding="utf-8")
-    data: dict[str, Any] = tomllib.loads(text)
+    data: dict[str, Any] = _migrate_config_data(tomllib.loads(text))
     return OverBabelConfig.model_validate(data)
 
 

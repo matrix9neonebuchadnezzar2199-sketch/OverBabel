@@ -63,7 +63,7 @@ class OverBabelApp(QObject):
             self._aborted = True
             return
 
-        self._use_grpc = use_grpc or self._config.work_mode == "audio_region"
+        self._use_grpc = use_grpc or self._config.audio.enabled
         live = live_capture and (self._config.capture.enabled or debug_boxes)
         self._overlay = OverlayWindow(
             debug_boxes=debug_boxes and not live,
@@ -234,7 +234,7 @@ class OverBabelApp(QObject):
             QMessageBox.warning(
                 None,
                 "OverBabel",
-                "範囲の指定が必要です。モード②③では矩形を囲んでから開始してください。",
+                "範囲の指定が必要です。②を選んだときは矩形を囲んでから開始してください。",
             )
             return False
         region = picker.region()
@@ -272,7 +272,8 @@ class OverBabelApp(QObject):
             "app.start",
             grpc=self._use_grpc,
             live=self._live_capture,
-            mode=self._config.work_mode,
+            text_scope=self._config.text_scope,
+            audio=self._config.audio.enabled,
         )
         self._overlay.show()
         self._tray.show()
@@ -283,13 +284,9 @@ class OverBabelApp(QObject):
             self._vision_grpc.start()
         if self._audio_grpc is not None:
             self._audio_grpc.start()
-        mode_names = {
-            "text_full": "① 画面全体テキスト",
-            "text_region": "② 範囲テキスト",
-            "audio_region": "③ 音声＋範囲",
-        }
-        hint = mode_names.get(self._config.work_mode, "")
-        self._tray.show_message("OverBabel", f"{hint} — Ctrl+Alt+T でオーバーレイ切替")
+        scope = "① 画面全体" if self._config.text_scope == "text_full" else "② 範囲指定"
+        audio = " ＋ 音声" if self._config.audio.enabled else ""
+        self._tray.show_message("OverBabel", f"{scope}{audio} — Ctrl+Alt+T でオーバーレイ切替")
         try:
             return self._qapp.exec()
         finally:

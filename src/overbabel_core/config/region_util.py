@@ -21,12 +21,12 @@ def write_region_to_settings(settings: CaptureRegionSettings, region: RegionOfIn
 
 
 def needs_region_pick(config: OverBabelConfig) -> bool:
-    return config.work_mode in ("text_region", "audio_region") and region_from_settings(
-        config.capture.region
-    ) is None
+    if config.text_scope != "text_region":
+        return False
+    return region_from_settings(config.capture.region) is None
 
 
 def active_capture_region(config: OverBabelConfig) -> RegionOfInterest | None:
-    if config.work_mode == "text_full":
+    if config.text_scope != "text_region":
         return None
     return region_from_settings(config.capture.region)

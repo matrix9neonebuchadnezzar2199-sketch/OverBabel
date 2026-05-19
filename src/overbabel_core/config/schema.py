@@ -9,7 +9,7 @@ from pydantic import BaseModel, Field
 ProfileId = Literal["A", "B", "C", "D"]
 OcrEngineId = Literal["rapidocr", "winocr", "tesseract", "stub"]
 TranslateEngineId = Literal["opus_mt", "nllb", "llm_gguf", "stub"]
-WorkModeId = Literal["text_full", "text_region", "audio_region"]
+TextScopeId = Literal["text_full", "text_region"]
 
 
 class CaptureRegionSettings(BaseModel):
@@ -95,7 +95,7 @@ class WelcomeSettings(BaseModel):
 
 class OverBabelConfig(BaseModel):
     schema_version: int = Field(default=3, ge=1)
-    work_mode: WorkModeId = "text_region"
+    text_scope: TextScopeId = "text_region"
     active_profile: ProfileId = "A"
     source_language: str = "en"
     target_language: str = "ja"
