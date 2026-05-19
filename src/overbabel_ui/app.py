@@ -10,9 +10,14 @@ from typing import TYPE_CHECKING
 from PyQt6.QtCore import QObject, Qt, QTimer, pyqtSignal, pyqtSlot
 from PyQt6.QtWidgets import QApplication, QDialog, QMessageBox
 
+from overbabel_core.config.audio_overlay import (
+    audio_subtitle_roi_in_region,
+    audio_subtitle_widget_rect,
+)
 from overbabel_core.config.loader import load_config, save_config
 from overbabel_core.config.region_util import active_capture_region, write_region_to_settings
 from overbabel_core.config.screen_coords import widget_rect_to_capture_region
+from overbabel_core.roi import RegionOfInterest
 from overbabel_core.config.user_flow import (
     should_show_raw_roi_boxes,
     should_show_region_picker,
@@ -225,32 +230,37 @@ class OverBabelApp(QObject):
         self._audio_grpc = AudioGrpcClient(port=self._config.grpc.audio_port)
         self._audio_grpc.subtitle_updated.connect(self._on_audio_subtitle)
 
+    def _audio_subtitle_roi(self) -> RegionOfInterest:
+        band = self._config.audio.subtitle_band
+        region = active_capture_region(self._config)
+        if region is not None:
+            return audio_subtitle_roi_in_region(region, band)
+        w, h = self._overlay.width(), self._overlay.height()
+        rect = audio_subtitle_widget_rect(w, h, band)
+        return widget_rect_to_capture_region(rect, dpr=self._overlay.device_pixel_ratio)
+
+    def _reposition_audio_label(self) -> None:
+        from overbabel_vision.pipeline import OverlayLabel
+
+        if not isinstance(self._audio_label, OverlayLabel):
+            return
+        self._audio_label = OverlayLabel(
+            tag=self._audio_label.tag,
+            text=self._audio_label.text,
+            roi=self._audio_subtitle_roi(),
+            accent=self._audio_label.accent,
+        )
+        self._refresh_overlay_labels()
+
     @pyqtSlot(str)
     def _on_audio_subtitle(self, text: str) -> None:
-        from overbabel_core.roi import RegionOfInterest
         from overbabel_vision.pipeline import OverlayLabel
 
         text = text.strip()
         if not text or text == self._last_audio_text:
             return
         self._last_audio_text = text
-
-        region = active_capture_region(self._config)
-        if region is not None:
-            roi = RegionOfInterest(
-                region.x,
-                region.y + max(region.h - 56, 0),
-                region.w,
-                48,
-            )
-        else:
-            from PyQt6.QtCore import QRect
-
-            w, h = self._overlay.width(), self._overlay.height()
-            roi = widget_rect_to_capture_region(
-                QRect(int(w * 0.2), int(h * 0.9), int(w * 0.6), 48),
-                dpr=self._overlay.device_pixel_ratio,
-            )
+        roi = self._audio_subtitle_roi()
         self._audio_label = OverlayLabel(tag="AUDIO", text=text, roi=roi, accent=True)
         self._refresh_overlay_labels()
 
@@ -312,6 +322,7 @@ class OverBabelApp(QObject):
             return
         save_config(self._config)
         self._overlay.set_capture_region_hint(active_capture_region(self._config))
+        self._reposition_audio_label()
         self._restart_vision_pipeline()
         self._tray.show_message("OverBabel", "範囲を更新しました。")
 
@@ -355,6 +366,7 @@ class OverBabelApp(QObject):
     def _apply_runtime_config(self) -> None:
         """Reload overlay hint and vision/audio workers after user changed mode."""
         self._overlay.set_capture_region_hint(active_capture_region(self._config))
+        self._reposition_audio_label()
         self._restart_vision_pipeline()
         if self._config.audio.enabled and self._audio_grpc is None:
             self._start_grpc_audio()
@@ -441,6 +453,8 @@ class OverBabelApp(QObject):
     @pyqtSlot(object)
     def _on_config_saved(self, config: object) -> None:
         self._config = config  # type: ignore[assignment]
+        self._overlay.set_capture_region_hint(active_capture_region(self._config))
+        self._reposition_audio_label()
         self._log.info("config.saved")
 
 

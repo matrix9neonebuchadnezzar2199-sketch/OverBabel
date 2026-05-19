@@ -86,10 +86,20 @@ def build_pages(cfg: OverBabelConfig) -> tuple[list[tuple[str, QWidget]], list[B
     # 4 Audio
     aud = QCheckBox()
     aud.setChecked(cfg.audio.enabled)
-    pages.append(("音声", _wrap_single("Enable audio pipeline", aud)))
+    aud_band = QComboBox()
+    aud_band.addItem("上", "top")
+    aud_band.addItem("中央", "center")
+    aud_band.addItem("下", "bottom")
+    idx = aud_band.findData(cfg.audio.subtitle_band)
+    aud_band.setCurrentIndex(idx if idx >= 0 else 2)
+    f_aud = QFormLayout()
+    f_aud.addRow("音声パイプライン", aud)
+    f_aud.addRow("字幕の表示位置", aud_band)
+    pages.append(("音声", _wrap(f_aud)))
 
     def bind_aud(c: OverBabelConfig) -> None:
         c.audio.enabled = aud.isChecked()
+        c.audio.subtitle_band = aud_band.currentData()  # type: ignore[assignment]
 
     binders.append(bind_aud)
 

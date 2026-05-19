@@ -10,6 +10,7 @@ ProfileId = Literal["A", "B", "C", "D"]
 OcrEngineId = Literal["rapidocr", "winocr", "tesseract", "stub"]
 TranslateEngineId = Literal["opus_mt", "nllb", "llm_gguf", "stub"]
 TextScopeId = Literal["text_full", "text_region"]
+AudioSubtitleBandId = Literal["top", "center", "bottom"]
 
 
 class CaptureRegionSettings(BaseModel):
@@ -36,6 +37,7 @@ class CaptureSettings(BaseModel):
 
 class AudioSettings(BaseModel):
     enabled: bool = False
+    subtitle_band: AudioSubtitleBandId = "bottom"
     device_id: str | None = None
     sample_rate: int = Field(default=16000, ge=8000)
     vad_aggressiveness: float = Field(default=0.5, ge=0.0, le=1.0)
