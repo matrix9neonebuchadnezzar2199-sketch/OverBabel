@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>ISSUE-107</title>
+  <link rel="stylesheet" href="../../_shared.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>ISSUE-107 <span class="badge ok">resolved</span></h1>
+  <p><strong>現象:</strong> 通常起動で画面全体に赤い枠（タグ <code>ROI</code>）が高速点滅。日本語訳（タグ <code>OCR</code>）が出ない。</p>
+  <p><strong>原因:</strong></p>
+  <ul>
+    <li>動画の毎フレーム差分で ROI が大量発生し、枠位置が毎回入れ替わる。</li>
+    <li>設定 <code>preview.show_roi_boxes</code> / <code>overlay.show_roi_boxes</code> がオンだと OCR ではなく生 ROI デバッグ描画になる。</li>
+    <li>ブラウザ UI や映像の動きも「変化領域」として検出される。</li>
+  </ul>
+  <p><strong>対処:</strong> ラベル安定化（保持 1.5s・最小 2 ヒット）、描画 4Hz スロットル、画面下帯の字幕候補フィルタ、デフォルト min_roi_area 引き上げ、ROI デバッグのデフォルト off。</p>
+</div>
+</body>
+</html>

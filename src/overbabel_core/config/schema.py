@@ -15,8 +15,9 @@ class CaptureSettings(BaseModel):
     enabled: bool = True
     fps_cap: int = Field(default=30, ge=1, le=60)
     diff_threshold: float = Field(default=30.0, ge=1.0, le=255.0)
-    min_roi_area: int = Field(default=2500, ge=16)
-    max_rois_per_frame: int = Field(default=12, ge=1, le=64)
+    min_roi_area: int = Field(default=6000, ge=16)
+    max_rois_per_frame: int = Field(default=8, ge=1, le=64)
+    subtitle_band_only: bool = True
     monitor_index: int = Field(default=0, ge=0)
 
 
@@ -47,7 +48,7 @@ class OverlaySettings(BaseModel):
     font_size: int = Field(default=14, ge=8, le=48)
     background_opacity: float = Field(default=0.55, ge=0.0, le=1.0)
     text_color: str = "#ffffff"
-    show_roi_boxes: bool = True
+    show_roi_boxes: bool = False
 
 
 class PreviewSettings(BaseModel):

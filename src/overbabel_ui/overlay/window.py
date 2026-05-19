@@ -78,7 +78,10 @@ class OverlayWindow(QWidget):
         self.update()
 
     def set_labels(self, labels: list[object]) -> None:
-        self._samples = labels_to_samples(labels)
+        samples = labels_to_samples(labels)
+        if samples == self._samples:
+            return
+        self._samples = samples
         self.update()
 
     def _build_debug_samples(self) -> list[DebugSample]:

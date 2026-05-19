@@ -78,8 +78,7 @@ class VisionPipeline:
                 self._on_rois(rois, frame)
             if self._process_rois is not None and self._on_labels is not None:
                 labels = self._process_rois(frame, rois)
-                if labels:
-                    self._on_labels(labels)
+                self._on_labels(labels)
 
     def run_loop(self, *, fps_cap: int = 30, until: Callable[[], bool] | None = None) -> None:
         """Blocking loop for bench script."""

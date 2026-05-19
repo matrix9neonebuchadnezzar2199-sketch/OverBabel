@@ -16,6 +16,7 @@ from overbabel_ui.audio_client import AudioGrpcClient
 from overbabel_ui.hotkey.manager import HotkeyManager
 from overbabel_ui.ipc_client.vision_client import VisionGrpcClient
 from overbabel_ui.onboarding import OnboardingDialog
+from overbabel_ui.overlay.label_stabilizer import LabelStabilizer
 from overbabel_ui.overlay.window import OverlayWindow
 from overbabel_ui.process_manager import ManagedProcess
 from overbabel_ui.settings.window import SettingsWindow
@@ -78,6 +79,10 @@ class OverBabelApp(QObject):
         self._vision_proc = ManagedProcess("vision")
         self._audio_proc = ManagedProcess("audio")
         self._settings: SettingsWindow | None = None
+        self._label_stabilizer = LabelStabilizer(hold_seconds=1.5, min_hits=2, max_visible=6)
+        self._label_paint_timer = QTimer(self)
+        self._label_paint_timer.setInterval(250)
+        self._label_paint_timer.timeout.connect(self._refresh_stable_labels)
 
         self.overlay_toggle_requested.connect(self._on_toggle_overlay)
         self._tray.toggle_overlay_requested.connect(self.request_toggle_overlay)
@@ -126,13 +131,18 @@ class OverBabelApp(QObject):
             cache_size=self._config.performance.cache_size,
         )
 
-        show_raw = self._debug_raw_rois or self._config.preview.show_roi_boxes
+        show_raw = (
+            self._debug_raw_rois
+            or self._config.preview.show_roi_boxes
+            or self._config.overlay.show_roi_boxes
+        )
 
         def _process_rois(frame, rois):
             return processor.process(
                 frame,
                 rois,
                 max_rois=self._config.capture.max_rois_per_frame,
+                subtitle_band=self._config.capture.subtitle_band_only,
             )
 
         pipeline = VisionPipeline(
@@ -147,9 +157,27 @@ class OverBabelApp(QObject):
             fps_cap=self._config.capture.fps_cap,
         )
         if show_raw:
+            self._log.warning(
+                "overlay.raw_roi_mode",
+                hint="赤い ROI 枠は開発用です。設定の「ROI 枠を表示」をオフにするか、--debug-roi を外してください。",
+            )
             self._vision_worker.rois_updated.connect(self._overlay.set_rois)
         else:
-            self._vision_worker.labels_updated.connect(self._overlay.set_labels)
+            self._vision_worker.labels_updated.connect(self._on_vision_labels)
+            self._label_paint_timer.start()
+
+    @pyqtSlot(list)
+    def _on_vision_labels(self, labels: list) -> None:
+        """Vision thread -> stabilizer (main thread); paint at most ~4 Hz."""
+        from overbabel_vision.pipeline import OverlayLabel
+
+        typed = [lb for lb in labels if isinstance(lb, OverlayLabel)]
+        self._label_stabilizer.push(typed)
+
+    @pyqtSlot()
+    def _refresh_stable_labels(self) -> None:
+        stable = self._label_stabilizer.snapshot()
+        self._overlay.set_labels(stable)
 
     def _start_grpc_vision(self) -> None:
         self._vision_proc.start("overbabel_vision.server")
@@ -195,6 +223,7 @@ class OverBabelApp(QObject):
 
     def _stop_workers(self) -> None:
         self._hotkeys.stop()
+        self._label_paint_timer.stop()
         if self._vision_worker is not None:
             self._vision_worker.stop()
             self._vision_worker.wait(3000)

@@ -8,6 +8,7 @@ from overbabel_core.roi import RegionOfInterest
 from overbabel_vision.cache import TranslationCache
 from overbabel_vision.ocr.base import OcrEngine
 from overbabel_vision.pipeline import OverlayLabel
+from overbabel_vision.roi_filter import filter_translation_candidates
 from overbabel_vision.translate.base import Translator
 
 
@@ -33,9 +34,12 @@ class VisionProcessor:
         rois: list[RegionOfInterest],
         *,
         max_rois: int = 12,
+        subtitle_band: bool = True,
     ) -> list[OverlayLabel]:
         if not rois:
             return []
+        fh, fw = frame.shape[:2]
+        rois = filter_translation_candidates(rois, fw, fh, subtitle_band=subtitle_band)
         rois = sorted(rois, key=lambda r: r.area, reverse=True)[:max_rois]
         ocr_results = self._ocr.detect(frame, rois)
         if not ocr_results:
