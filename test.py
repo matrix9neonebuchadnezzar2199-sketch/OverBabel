@@ -28,6 +28,7 @@ SECTIONS: list[tuple[str, str]] = [
     ("overlay", "tests/regression/test_operational_checklist.py::TestOverlayCoordinates"),
     ("stabilizer", "tests/regression/test_operational_checklist.py::TestLabelStabilizer"),
     ("quiet", "tests/regression/test_operational_checklist.py::TestQuietModeTuning"),
+    ("region-picker", "tests/regression/test_region_picker_logic.py"),
     ("regression-file", "tests/regression/test_operational_checklist.py"),
     ("user-flow-unit", "tests/test_user_flow.py"),
     ("work-modes", "tests/test_work_modes.py"),
