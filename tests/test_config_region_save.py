@@ -16,3 +16,4 @@ def test_region_roundtrip_in_toml(tmp_path, monkeypatch) -> None:
     assert loaded.capture.region.w == 640
     assert loaded.capture.region.h == 280
     assert loaded.capture.region.x == 120
+    assert loaded.capture.region.confirmed is True

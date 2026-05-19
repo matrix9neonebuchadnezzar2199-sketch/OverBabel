@@ -17,16 +17,29 @@ def region_from_settings(settings: CaptureRegionSettings) -> RegionOfInterest | 
 
 def write_region_to_settings(settings: CaptureRegionSettings, region: RegionOfInterest) -> None:
     settings.enabled = True
+    settings.confirmed = True
     settings.x = region.x
     settings.y = region.y
     settings.w = region.w
     settings.h = region.h
 
 
+def clear_capture_region(settings: CaptureRegionSettings) -> None:
+    settings.enabled = False
+    settings.confirmed = False
+    settings.x = 0
+    settings.y = 0
+    settings.w = 0
+    settings.h = 0
+
+
 def needs_region_pick(config: OverBabelConfig) -> bool:
     if config.text_scope != "text_region":
         return False
-    return region_from_settings(config.capture.region) is None
+    reg = config.capture.region
+    if not reg.confirmed:
+        return True
+    return region_from_settings(reg) is None
 
 
 def active_capture_region(config: OverBabelConfig) -> RegionOfInterest | None:

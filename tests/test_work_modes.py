@@ -30,6 +30,14 @@ def test_needs_region_pick_when_empty() -> None:
     assert needs_region_pick(cfg) is False
 
 
+def test_apply_text_region_clears_confirmed_until_picker() -> None:
+    cfg = OverBabelConfig()
+    write_region_to_settings(cfg.capture.region, RegionOfInterest(10, 10, 200, 100))
+    apply_work_preferences(cfg, "text_region", audio=False)
+    assert cfg.capture.region.confirmed is False
+    assert needs_region_pick(cfg) is True
+
+
 def test_text_full_skips_region_pick() -> None:
     cfg = OverBabelConfig(text_scope="text_full")
     cfg.audio.enabled = True

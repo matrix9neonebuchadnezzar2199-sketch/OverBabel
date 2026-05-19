@@ -16,6 +16,7 @@ class CaptureRegionSettings(BaseModel):
     """Monitor-local rectangle (pixels) for region-limited modes."""
 
     enabled: bool = False
+    confirmed: bool = False  # True only after RegionPicker completed
     x: int = Field(default=0, ge=0)
     y: int = Field(default=0, ge=0)
     w: int = Field(default=0, ge=0)

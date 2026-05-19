@@ -256,13 +256,18 @@ class OverBabelApp(QObject):
 
     def _run_startup_flow(self) -> bool:
         dirty = False
+        welcome_shown = False
         if self._config.welcome.show_on_startup or not self._config.onboarding.completed:
             dlg = WelcomeDialog(self._config)
             if dlg.exec() != int(QDialog.DialogCode.Accepted):
                 return False
             dlg.apply(self._config)
             dirty = True
-        if needs_region_pick(self._config):
+            welcome_shown = True
+        must_pick_region = self._config.text_scope == "text_region" and (
+            needs_region_pick(self._config) or welcome_shown
+        )
+        if must_pick_region:
             if not self._pick_capture_region():
                 return False
             dirty = True
