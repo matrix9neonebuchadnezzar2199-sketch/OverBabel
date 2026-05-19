@@ -87,6 +87,10 @@ class WelcomeDialog(QDialog):
         form.addRow("訳文", self._tgt)
         layout.addLayout(form)
 
+        self._quiet = QCheckBox("静音・省電力（CPU 負荷を抑える）")
+        self._quiet.setChecked(config.performance.quiet_mode)
+        layout.addWidget(self._quiet)
+
         self._hide_next = QCheckBox("次回からこのメニューを表示しない")
         self._hide_next.setChecked(not config.welcome.show_on_startup)
         layout.addWidget(self._hide_next)
@@ -103,6 +107,7 @@ class WelcomeDialog(QDialog):
         return "text_full" if self._opt_full.isChecked() else "text_region"
 
     def apply(self, config: OverBabelConfig) -> None:
+        config.performance.quiet_mode = self._quiet.isChecked()
         apply_work_preferences(
             config,
             self.selected_text_scope(),

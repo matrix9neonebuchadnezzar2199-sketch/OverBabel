@@ -62,35 +62,45 @@ class VisionPipeline:
     def has_ocr_pipeline(self) -> bool:
         return self._process_rois is not None
 
-    def tick(self) -> None:
-        """Process one frame (call from worker thread)."""
+    def tick(self) -> bool:
+        """Process one frame (call from worker thread). Returns True if OCR/ROI work ran."""
         frame = self._capture.grab()
         if frame is None:
-            return
+            return False
         self._frame_count += 1
         rois = self._differ.update(frame)
         if len(rois) > self._max_rois:
             rois = sorted(rois, key=lambda r: r.area, reverse=True)[: self._max_rois]
-        if rois:
-            self._roi_count += len(rois)
-            # Raw ROI debug callback only when OCR pipeline is off (see app wiring).
-            if self._on_rois is not None and self._process_rois is None:
-                self._on_rois(rois, frame)
-            if self._process_rois is not None and self._on_labels is not None:
-                labels = self._process_rois(frame, rois)
-                self._on_labels(labels)
+        if not rois:
+            return False
+        self._roi_count += len(rois)
+        # Raw ROI debug callback only when OCR pipeline is off (see app wiring).
+        if self._on_rois is not None and self._process_rois is None:
+            self._on_rois(rois, frame)
+        if self._process_rois is not None and self._on_labels is not None:
+            labels = self._process_rois(frame, rois)
+            self._on_labels(labels)
+        return True
 
-    def run_loop(self, *, fps_cap: int = 30, until: Callable[[], bool] | None = None) -> None:
+    def run_loop(
+        self,
+        *,
+        fps_cap: int = 30,
+        idle_fps_cap: int = 4,
+        until: Callable[[], bool] | None = None,
+    ) -> None:
         """Blocking loop for bench script."""
         self._running = True
-        interval = 1.0 / max(fps_cap, 1)
+        active_interval = 1.0 / max(fps_cap, 1)
+        idle_interval = 1.0 / max(idle_fps_cap, 1)
         try:
             while self._running:
                 if until is not None and until():
                     break
                 t0 = time.perf_counter()
-                self.tick()
+                busy = self.tick()
                 elapsed = time.perf_counter() - t0
+                interval = active_interval if busy else idle_interval
                 sleep = interval - elapsed
                 if sleep > 0:
                     time.sleep(sleep)

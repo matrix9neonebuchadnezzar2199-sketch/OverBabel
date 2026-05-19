@@ -72,6 +72,8 @@ class PerformanceSettings(BaseModel):
     ocr_workers: int = Field(default=2, ge=1, le=8)
     translate_workers: int = Field(default=2, ge=1, le=8)
     cache_size: int = Field(default=2048, ge=128)
+    quiet_mode: bool = True
+    idle_fps_cap: int = Field(default=4, ge=1, le=15)
 
 
 class HotkeySettings(BaseModel):

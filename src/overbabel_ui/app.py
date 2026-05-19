@@ -88,7 +88,8 @@ class OverBabelApp(QObject):
         self._audio_label: object | None = None
         self._last_audio_text: str = ""
         self._label_paint_timer = QTimer(self)
-        self._label_paint_timer.setInterval(250)
+        paint_ms = 400 if self._config.performance.quiet_mode else 250
+        self._label_paint_timer.setInterval(paint_ms)
         self._label_paint_timer.timeout.connect(self._refresh_overlay_labels)
 
         self.overlay_toggle_requested.connect(self._on_toggle_overlay)
@@ -162,9 +163,15 @@ class OverBabelApp(QObject):
             max_rois_per_frame=self._config.capture.max_rois_per_frame,
             process_rois=None if show_raw else _process_rois,
         )
+        idle_fps = (
+            self._config.performance.idle_fps_cap
+            if self._config.performance.quiet_mode
+            else self._config.capture.fps_cap
+        )
         self._vision_worker = VisionWorker(
             pipeline,
             fps_cap=self._config.capture.fps_cap,
+            idle_fps_cap=idle_fps,
         )
         if show_raw:
             self._log.warning(

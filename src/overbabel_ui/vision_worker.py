@@ -12,10 +12,17 @@ class VisionWorker(QThread):
     rois_updated = pyqtSignal(list)
     labels_updated = pyqtSignal(list)
 
-    def __init__(self, pipeline: VisionPipeline, *, fps_cap: int = 30) -> None:
+    def __init__(
+        self,
+        pipeline: VisionPipeline,
+        *,
+        fps_cap: int = 30,
+        idle_fps_cap: int = 4,
+    ) -> None:
         super().__init__()
         self._pipeline = pipeline
         self._fps_cap = fps_cap
+        self._idle_fps_cap = idle_fps_cap
         self._running = True
 
     def run(self) -> None:
@@ -23,7 +30,11 @@ class VisionWorker(QThread):
             self._pipeline._on_labels = self._emit_labels
         else:
             self._pipeline._on_rois = self._emit_rois
-        self._pipeline.run_loop(fps_cap=self._fps_cap, until=lambda: not self._running)
+        self._pipeline.run_loop(
+            fps_cap=self._fps_cap,
+            idle_fps_cap=self._idle_fps_cap,
+            until=lambda: not self._running,
+        )
 
     def stop(self) -> None:
         self._running = False

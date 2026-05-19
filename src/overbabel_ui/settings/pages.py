@@ -141,12 +141,23 @@ def build_pages(cfg: OverBabelConfig) -> tuple[list[tuple[str, QWidget]], list[B
     binders.append(bind_pr)
 
     # 10 Performance
+    quiet = QCheckBox()
+    quiet.setChecked(cfg.performance.quiet_mode)
+    idle = QSpinBox()
+    idle.setRange(1, 15)
+    idle.setValue(cfg.performance.idle_fps_cap)
     cache = QSpinBox()
     cache.setRange(128, 100000)
     cache.setValue(cfg.performance.cache_size)
-    pages.append(("パフォーマンス", _wrap_single("Cache size", cache)))
+    pf = QFormLayout()
+    pf.addRow("静音・省電力", quiet)
+    pf.addRow("静止時 FPS 上限", idle)
+    pf.addRow("Cache size", cache)
+    pages.append(("パフォーマンス", _page("パフォーマンス", pf)))
 
     def bind_perf(c: OverBabelConfig) -> None:
+        c.performance.quiet_mode = quiet.isChecked()
+        c.performance.idle_fps_cap = idle.value()
         c.performance.cache_size = cache.value()
 
     binders.append(bind_perf)

@@ -28,3 +28,16 @@ def apply_work_preferences(
         cap.min_roi_area = 1200
         cap.max_rois_per_frame = 8
         cap.region.enabled = True
+    _apply_quiet_tuning(config)
+
+
+def _apply_quiet_tuning(config: OverBabelConfig) -> None:
+    if not config.performance.quiet_mode:
+        return
+    cap = config.capture
+    if config.text_scope == "text_full":
+        cap.fps_cap = min(cap.fps_cap, 10)
+        cap.max_rois_per_frame = min(cap.max_rois_per_frame, 6)
+    else:
+        cap.fps_cap = min(cap.fps_cap, 6)
+        cap.max_rois_per_frame = min(cap.max_rois_per_frame, 4)
