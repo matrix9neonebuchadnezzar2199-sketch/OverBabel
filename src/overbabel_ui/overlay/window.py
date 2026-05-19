@@ -49,6 +49,10 @@ class OverlayWindow(QWidget):
 
         self._apply_primary_geometry()
 
+    @property
+    def device_pixel_ratio(self) -> float:
+        return self._dpr
+
     # --- geometry -------------------------------------------------------
 
     def _apply_primary_geometry(self) -> None:

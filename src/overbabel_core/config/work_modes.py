@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from overbabel_core.config.region_util import clear_capture_region, region_from_settings
+from overbabel_core.config.region_util import clear_capture_region
 from overbabel_core.config.schema import OverBabelConfig, TextScopeId
 
 
@@ -28,12 +28,8 @@ def apply_work_preferences(
         cap.fps_cap = 12
         cap.min_roi_area = 1200
         cap.max_rois_per_frame = 8
-        # ②は毎回ピッカーで確定するまで古い範囲を使わない
-        if region_from_settings(cap.region) is None:
-            clear_capture_region(cap.region)
-        else:
-            cap.region.enabled = True
-            cap.region.confirmed = False
+        # ②に切り替えたら座標はピッカー確定まで使わない
+        clear_capture_region(cap.region)
     _apply_quiet_tuning(config)
 
 

@@ -11,23 +11,21 @@ from PyQt6.QtCore import QObject, Qt, QTimer, pyqtSignal, pyqtSlot
 from PyQt6.QtWidgets import QApplication, QDialog, QMessageBox
 
 from overbabel_core.config.loader import load_config, save_config
+from overbabel_core.config.region_util import active_capture_region, write_region_to_settings
+from overbabel_core.config.screen_coords import widget_rect_to_capture_region
+from overbabel_core.config.user_flow import should_show_region_picker
 from overbabel_core.utils import get_logger, setup_logging
 from overbabel_ui.audio_client import AudioGrpcClient
 from overbabel_ui.hotkey.manager import HotkeyManager
 from overbabel_ui.ipc_client.vision_client import VisionGrpcClient
-from overbabel_core.config.region_util import (
-    active_capture_region,
-    needs_region_pick,
-    write_region_to_settings,
-)
-from overbabel_ui.region_picker import RegionPickerDialog
-from overbabel_ui.welcome_dialog import WelcomeDialog
 from overbabel_ui.overlay.label_stabilizer import LabelStabilizer
 from overbabel_ui.overlay.window import OverlayWindow
 from overbabel_ui.process_manager import ManagedProcess
+from overbabel_ui.region_picker import RegionPickerDialog
 from overbabel_ui.settings.window import SettingsWindow
 from overbabel_ui.tray.tray import OverBabelTray
 from overbabel_ui.vision_worker import VisionWorker
+from overbabel_ui.welcome_dialog import WelcomeDialog
 
 if TYPE_CHECKING:
     from overbabel_core.config.schema import OverBabelConfig
@@ -62,11 +60,6 @@ class OverBabelApp(QObject):
         if not self._run_startup_flow():
             self._aborted = True
             return
-        if self._config.text_scope == "text_region" and active_capture_region(self._config) is None:
-            if not self._pick_capture_region():
-                self._aborted = True
-                return
-            save_config(self._config)
 
         # 音声だけ gRPC。画面テキスト OCR は通常どおりインライン（--use-grpc 時のみ vision gRPC）。
         self._use_grpc_vision = use_grpc
@@ -249,8 +242,13 @@ class OverBabelApp(QObject):
                 48,
             )
         else:
+            from PyQt6.QtCore import QRect
+
             w, h = self._overlay.width(), self._overlay.height()
-            roi = RegionOfInterest(x=int(w * 0.2), y=int(h * 0.9), w=int(w * 0.6), h=48)
+            roi = widget_rect_to_capture_region(
+                QRect(int(w * 0.2), int(h * 0.9), int(w * 0.6), 48),
+                dpr=self._overlay.device_pixel_ratio,
+            )
         self._audio_label = OverlayLabel(tag="AUDIO", text=text, roi=roi, accent=True)
         self._refresh_overlay_labels()
 
@@ -264,10 +262,7 @@ class OverBabelApp(QObject):
             dlg.apply(self._config)
             dirty = True
             welcome_shown = True
-        must_pick_region = self._config.text_scope == "text_region" and (
-            needs_region_pick(self._config) or welcome_shown
-        )
-        if must_pick_region:
+        if should_show_region_picker(self._config, after_welcome=welcome_shown):
             if not self._pick_capture_region():
                 return False
             dirty = True
@@ -348,14 +343,28 @@ class OverBabelApp(QObject):
         if dlg.exec() != int(QDialog.DialogCode.Accepted):
             return
         dlg.apply(self._config)
-        if needs_region_pick(self._config) and not self._pick_capture_region():
-            return
-        save_config(self._config)  # includes region when re-picked
-        QMessageBox.information(
-            None,
-            "OverBabel",
-            "モードを保存しました。反映のためアプリを再起動してください。",
-        )
+        if should_show_region_picker(self._config, after_welcome=True):
+            if not self._pick_capture_region():
+                return
+        save_config(self._config)
+        self._apply_runtime_config()
+        self._tray.show_message("OverBabel", "モードを反映しました。")
+
+    def _apply_runtime_config(self) -> None:
+        """Reload overlay hint and vision/audio workers after user changed mode."""
+        self._overlay.set_capture_region_hint(active_capture_region(self._config))
+        self._restart_vision_pipeline()
+        if self._config.audio.enabled and self._audio_grpc is None:
+            self._start_grpc_audio()
+            if self._audio_grpc is not None:
+                self._audio_grpc.start()
+        elif not self._config.audio.enabled and self._audio_grpc is not None:
+            self._audio_grpc.stop()
+            self._audio_grpc.wait(3000)
+            self._audio_grpc = None
+            self._audio_proc.stop()
+            self._audio_label = None
+            self._last_audio_text = ""
 
     def run(self) -> int:
         if self._aborted:

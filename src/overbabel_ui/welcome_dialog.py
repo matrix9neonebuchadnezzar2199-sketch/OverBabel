@@ -15,7 +15,7 @@ from PyQt6.QtWidgets import (
 )
 
 from overbabel_core.config.schema import OverBabelConfig, TextScopeId
-from overbabel_core.config.work_modes import apply_work_preferences
+from overbabel_core.config.user_flow import apply_user_choices
 
 
 class WelcomeDialog(QDialog):
@@ -49,7 +49,7 @@ class WelcomeDialog(QDialog):
                 ),
                 (
                     self._opt_region,
-                    "字幕ウィンドウやプレイヤー周辺だけ。範囲指定が必要です。",
+                    "「開始」の直後、必ず画面でドラッグして範囲を囲みます。",
                     "負荷: 小",
                 ),
             )
@@ -107,11 +107,11 @@ class WelcomeDialog(QDialog):
         return "text_full" if self._opt_full.isChecked() else "text_region"
 
     def apply(self, config: OverBabelConfig) -> None:
-        config.performance.quiet_mode = self._quiet.isChecked()
-        apply_work_preferences(
+        apply_user_choices(
             config,
-            self.selected_text_scope(),
+            text_scope=self.selected_text_scope(),
             audio=self._audio.isChecked(),
+            quiet_mode=self._quiet.isChecked(),
         )
         config.source_language = self._src.currentText()
         config.target_language = self._tgt.currentText()

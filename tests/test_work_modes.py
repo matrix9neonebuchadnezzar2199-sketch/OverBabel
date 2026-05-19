@@ -1,5 +1,9 @@
 from overbabel_core.config.loader import _migrate_config_data
-from overbabel_core.config.region_util import needs_region_pick, write_region_to_settings
+from overbabel_core.config.region_util import (
+    active_capture_region,
+    needs_region_pick,
+    write_region_to_settings,
+)
 from overbabel_core.config.schema import OverBabelConfig
 from overbabel_core.config.work_modes import apply_work_preferences
 from overbabel_core.roi import RegionOfInterest
@@ -35,7 +39,16 @@ def test_apply_text_region_clears_confirmed_until_picker() -> None:
     write_region_to_settings(cfg.capture.region, RegionOfInterest(10, 10, 200, 100))
     apply_work_preferences(cfg, "text_region", audio=False)
     assert cfg.capture.region.confirmed is False
+    assert active_capture_region(cfg) is None
     assert needs_region_pick(cfg) is True
+
+
+def test_active_capture_region_requires_confirmed() -> None:
+    cfg = OverBabelConfig(text_scope="text_region")
+    write_region_to_settings(cfg.capture.region, RegionOfInterest(10, 10, 200, 100))
+    assert active_capture_region(cfg) is not None
+    cfg.capture.region.confirmed = False
+    assert active_capture_region(cfg) is None
 
 
 def test_text_full_skips_region_pick() -> None:

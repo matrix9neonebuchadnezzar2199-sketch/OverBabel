@@ -1,6 +1,6 @@
 from overbabel_core.config.loader import load_config, save_config
-from overbabel_core.config.schema import OverBabelConfig
 from overbabel_core.config.region_util import write_region_to_settings
+from overbabel_core.config.schema import OverBabelConfig
 from overbabel_core.roi import RegionOfInterest
 
 

@@ -43,6 +43,10 @@ def needs_region_pick(config: OverBabelConfig) -> bool:
 
 
 def active_capture_region(config: OverBabelConfig) -> RegionOfInterest | None:
+    """Return user-confirmed capture rectangle in physical pixels, or None."""
     if config.text_scope != "text_region":
         return None
-    return region_from_settings(config.capture.region)
+    reg = config.capture.region
+    if not reg.confirmed:
+        return None
+    return region_from_settings(reg)
