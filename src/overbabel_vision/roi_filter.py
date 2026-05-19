@@ -5,6 +5,19 @@ from __future__ import annotations
 from overbabel_core.roi import RegionOfInterest
 
 
+def clip_rois_to_capture_region(
+    rois: list[RegionOfInterest],
+    region: RegionOfInterest,
+) -> list[RegionOfInterest]:
+    """Keep only diff boxes inside the user-selected monitor rectangle."""
+    out: list[RegionOfInterest] = []
+    for r in rois:
+        clipped = r.clip(region)
+        if clipped is not None and clipped.area >= 64:
+            out.append(clipped)
+    return out
+
+
 def filter_translation_candidates(
     rois: list[RegionOfInterest],
     frame_width: int,

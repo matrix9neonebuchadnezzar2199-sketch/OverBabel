@@ -12,6 +12,6 @@ def test_processor_stub_pipeline() -> None:
     proc = VisionProcessor(StubOcrEngine(), StubTranslator(), src="en", tgt="ja")
     frame = np.zeros((200, 200, 3), dtype=np.uint8)
     rois = [RegionOfInterest(x=10, y=10, w=80, h=40)]
-    labels = proc.process(frame, rois)
+    labels = proc.process(frame, rois, subtitle_band=False)
     assert labels
     assert labels[0].text

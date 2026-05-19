@@ -13,6 +13,7 @@ from PyQt6.QtWidgets import QApplication, QMenu, QStyle, QSystemTrayIcon
 class OverBabelTray(QObject):
     toggle_overlay_requested = pyqtSignal()
     settings_requested = pyqtSignal()
+    mode_change_requested = pyqtSignal()
     quit_requested = pyqtSignal()
 
     def __init__(self, parent: QObject | None = None) -> None:
@@ -29,6 +30,10 @@ class OverBabelTray(QObject):
         self._act_settings = QAction("設定…", self._menu)
         self._act_settings.triggered.connect(self.settings_requested.emit)
         self._menu.addAction(self._act_settings)
+
+        self._act_mode = QAction("モードを変更…", self._menu)
+        self._act_mode.triggered.connect(self.mode_change_requested.emit)
+        self._menu.addAction(self._act_mode)
 
         self._menu.addSeparator()
 

@@ -9,6 +9,17 @@ from pydantic import BaseModel, Field
 ProfileId = Literal["A", "B", "C", "D"]
 OcrEngineId = Literal["rapidocr", "winocr", "tesseract", "stub"]
 TranslateEngineId = Literal["opus_mt", "nllb", "llm_gguf", "stub"]
+WorkModeId = Literal["text_full", "text_region", "audio_region"]
+
+
+class CaptureRegionSettings(BaseModel):
+    """Monitor-local rectangle (pixels) for region-limited modes."""
+
+    enabled: bool = False
+    x: int = Field(default=0, ge=0)
+    y: int = Field(default=0, ge=0)
+    w: int = Field(default=0, ge=0)
+    h: int = Field(default=0, ge=0)
 
 
 class CaptureSettings(BaseModel):
@@ -19,6 +30,7 @@ class CaptureSettings(BaseModel):
     max_rois_per_frame: int = Field(default=8, ge=1, le=64)
     subtitle_band_only: bool = True
     monitor_index: int = Field(default=0, ge=0)
+    region: CaptureRegionSettings = Field(default_factory=CaptureRegionSettings)
 
 
 class AudioSettings(BaseModel):
@@ -77,8 +89,13 @@ class OnboardingSettings(BaseModel):
     completed: bool = False
 
 
+class WelcomeSettings(BaseModel):
+    show_on_startup: bool = True
+
+
 class OverBabelConfig(BaseModel):
-    schema_version: int = Field(default=2, ge=1)
+    schema_version: int = Field(default=3, ge=1)
+    work_mode: WorkModeId = "text_region"
     active_profile: ProfileId = "A"
     source_language: str = "en"
     target_language: str = "ja"
@@ -94,3 +111,4 @@ class OverBabelConfig(BaseModel):
     hotkey: HotkeySettings = Field(default_factory=HotkeySettings)
     grpc: GrpcSettings = Field(default_factory=GrpcSettings)
     onboarding: OnboardingSettings = Field(default_factory=OnboardingSettings)
+    welcome: WelcomeSettings = Field(default_factory=WelcomeSettings)

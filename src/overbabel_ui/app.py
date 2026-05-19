@@ -8,14 +8,20 @@ import sys
 from typing import TYPE_CHECKING
 
 from PyQt6.QtCore import QObject, Qt, QTimer, pyqtSignal, pyqtSlot
-from PyQt6.QtWidgets import QApplication
+from PyQt6.QtWidgets import QApplication, QDialog, QMessageBox
 
 from overbabel_core.config.loader import load_config, save_config
 from overbabel_core.utils import get_logger, setup_logging
 from overbabel_ui.audio_client import AudioGrpcClient
 from overbabel_ui.hotkey.manager import HotkeyManager
 from overbabel_ui.ipc_client.vision_client import VisionGrpcClient
-from overbabel_ui.onboarding import OnboardingDialog
+from overbabel_core.config.region_util import (
+    active_capture_region,
+    needs_region_pick,
+    write_region_to_settings,
+)
+from overbabel_ui.region_picker import RegionPickerDialog
+from overbabel_ui.welcome_dialog import WelcomeDialog
 from overbabel_ui.overlay.label_stabilizer import LabelStabilizer
 from overbabel_ui.overlay.window import OverlayWindow
 from overbabel_ui.process_manager import ManagedProcess
@@ -45,21 +51,19 @@ class OverBabelApp(QObject):
         self._use_grpc = use_grpc
         self._debug_raw_rois = debug_raw_rois
         self._config: OverBabelConfig = load_config()
+        self._aborted = False
 
-        # QApplication must exist before any QWidget (onboarding, overlay, tray).
+        # QApplication must exist before any QWidget (welcome, overlay, tray).
         self._qapp = QApplication.instance() or QApplication(sys.argv)
         assert isinstance(self._qapp, QApplication)
         self._qapp.setQuitOnLastWindowClosed(False)
         self._qapp.setApplicationName("OverBabel")
 
-        if not self._config.onboarding.completed:
-            dlg = OnboardingDialog(self._config)
-            if dlg.exec():
-                dlg.apply(self._config)
-                save_config(self._config)
-        else:
-            save_config(self._config)
+        if not self._run_startup_flow():
+            self._aborted = True
+            return
 
+        self._use_grpc = use_grpc or self._config.work_mode == "audio_region"
         live = live_capture and (self._config.capture.enabled or debug_boxes)
         self._overlay = OverlayWindow(
             debug_boxes=debug_boxes and not live,
@@ -87,6 +91,7 @@ class OverBabelApp(QObject):
         self.overlay_toggle_requested.connect(self._on_toggle_overlay)
         self._tray.toggle_overlay_requested.connect(self.request_toggle_overlay)
         self._tray.settings_requested.connect(self._open_settings)
+        self._tray.mode_change_requested.connect(self._open_welcome_menu)
         self._tray.quit_requested.connect(self.quit)
 
         signal.signal(signal.SIGINT, lambda *_: self.quit())
@@ -94,12 +99,12 @@ class OverBabelApp(QObject):
         self._sigint_timer.start(100)
         self._sigint_timer.timeout.connect(lambda: None)
 
-        if live and not use_grpc:
+        if live and not self._use_grpc:
             self._start_inline_vision()
-        elif live and use_grpc:
+        elif live and self._use_grpc:
             self._start_grpc_vision()
 
-        if use_grpc and self._config.audio.enabled:
+        if self._use_grpc and self._config.audio.enabled:
             self._start_grpc_audio()
 
     def _start_inline_vision(self) -> None:
@@ -136,6 +141,7 @@ class OverBabelApp(QObject):
             or self._config.preview.show_roi_boxes
             or self._config.overlay.show_roi_boxes
         )
+        capture_region = active_capture_region(self._config)
 
         def _process_rois(frame, rois):
             return processor.process(
@@ -143,6 +149,7 @@ class OverBabelApp(QObject):
                 rois,
                 max_rois=self._config.capture.max_rois_per_frame,
                 subtitle_band=self._config.capture.subtitle_band_only,
+                capture_region=capture_region,
             )
 
         pipeline = VisionPipeline(
@@ -194,17 +201,79 @@ class OverBabelApp(QObject):
         from overbabel_core.roi import RegionOfInterest
         from overbabel_vision.pipeline import OverlayLabel
 
-        w, h = self._overlay.width(), self._overlay.height()
-        label = OverlayLabel(
-            tag="AUDIO",
-            text=text,
-            roi=RegionOfInterest(x=int(w * 0.2), y=int(h * 0.9), w=int(w * 0.6), h=48),
-            accent=True,
-        )
+        region = active_capture_region(self._config)
+        if region is not None:
+            roi = RegionOfInterest(
+                region.x,
+                region.y + max(region.h - 56, 0),
+                region.w,
+                48,
+            )
+        else:
+            w, h = self._overlay.width(), self._overlay.height()
+            roi = RegionOfInterest(x=int(w * 0.2), y=int(h * 0.9), w=int(w * 0.6), h=48)
+        label = OverlayLabel(tag="AUDIO", text=text, roi=roi, accent=True)
         self._overlay.set_labels([label])
 
+    def _run_startup_flow(self) -> bool:
+        if self._config.welcome.show_on_startup or not self._config.onboarding.completed:
+            dlg = WelcomeDialog(self._config)
+            if dlg.exec() != int(QDialog.DialogCode.Accepted):
+                return False
+            dlg.apply(self._config)
+            save_config(self._config)
+        if needs_region_pick(self._config):
+            if not self._pick_capture_region():
+                return False
+            save_config(self._config)
+        return True
+
+    def _pick_capture_region(self) -> bool:
+        picker = RegionPickerDialog()
+        if picker.exec() != int(QDialog.DialogCode.Accepted):
+            QMessageBox.warning(
+                None,
+                "OverBabel",
+                "範囲の指定が必要です。モード②③では矩形を囲んでから開始してください。",
+            )
+            return False
+        region = picker.region()
+        if region is None:
+            return False
+        write_region_to_settings(self._config.capture.region, region)
+        self._log.info(
+            "capture.region_set",
+            x=region.x,
+            y=region.y,
+            w=region.w,
+            h=region.h,
+        )
+        return True
+
+    @pyqtSlot()
+    def _open_welcome_menu(self) -> None:
+        dlg = WelcomeDialog(self._config)
+        if dlg.exec() != int(QDialog.DialogCode.Accepted):
+            return
+        dlg.apply(self._config)
+        if needs_region_pick(self._config) and not self._pick_capture_region():
+            return
+        save_config(self._config)
+        QMessageBox.information(
+            None,
+            "OverBabel",
+            "モードを保存しました。反映のためアプリを再起動してください。",
+        )
+
     def run(self) -> int:
-        self._log.info("app.start", grpc=self._use_grpc, live=self._live_capture)
+        if self._aborted:
+            return 0
+        self._log.info(
+            "app.start",
+            grpc=self._use_grpc,
+            live=self._live_capture,
+            mode=self._config.work_mode,
+        )
         self._overlay.show()
         self._tray.show()
         self._hotkeys.start()
@@ -214,7 +283,13 @@ class OverBabelApp(QObject):
             self._vision_grpc.start()
         if self._audio_grpc is not None:
             self._audio_grpc.start()
-        self._tray.show_message("OverBabel", "Running. Ctrl+Alt+T toggles overlay.")
+        mode_names = {
+            "text_full": "① 画面全体テキスト",
+            "text_region": "② 範囲テキスト",
+            "audio_region": "③ 音声＋範囲",
+        }
+        hint = mode_names.get(self._config.work_mode, "")
+        self._tray.show_message("OverBabel", f"{hint} — Ctrl+Alt+T でオーバーレイ切替")
         try:
             return self._qapp.exec()
         finally:
