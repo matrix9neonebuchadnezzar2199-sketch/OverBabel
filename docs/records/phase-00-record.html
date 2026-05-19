@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>Phase 0 記録 — プロジェクト基盤</title>
+  <link rel="stylesheet" href="_shared.css">
+</head>
+<body>
+<div class="wrap">
+  <nav class="top"><a href="index.html">← マスター索引</a> · <a href="design/phase-00-design.md">設計</a></nav>
+  <h1>Phase 0 完了記録</h1>
+  <p class="meta">状態: <span class="badge ok">完了</span> · コミット: <code>1721e8d</code> · ブランチ: <code>main</code></p>
+
+  <h2>設計要約</h2>
+  <div class="card">
+    <p>Python 3.11+ パッケージ、CI（ruff/black/mypy/pytest）、docs、proto 雛形、<code>overbabel_core</code> 最小構成。</p>
+    <p>詳細: <a href="design/phase-00-design.md">phase-00-design.md</a></p>
+  </div>
+
+  <h2>実装範囲</h2>
+  <ul>
+    <li><code>pyproject.toml</code>, requirements, pre-commit, <code>.github/workflows/ci.yml</code></li>
+    <li><code>src/overbabel_core/</code>（config paths/schema, ipc placeholder）</li>
+    <li><code>src/overbabel_ui/main.py</code>（Phase 0 スタブ）</li>
+    <li><code>docs/architecture.md</code>, <code>design-spec.md</code>, <code>mockup.html</code></li>
+    <li><code>tests/unit/test_core_bootstrap.py</code></li>
+  </ul>
+
+  <h2>検証</h2>
+  <ul>
+    <li><code>pip install -e ".[dev,ui]"</code></li>
+    <li><code>ruff</code> / <code>black --check</code> / <code>pytest</code> / <code>mypy</code>（CI 上 mypy は continue-on-error）</li>
+    <li><code>python -c "import overbabel_core"</code></li>
+  </ul>
+
+  <h2>Git</h2>
+  <pre>git push -u origin main  # 初回 push 完了</pre>
+
+  <h2>関連課題</h2>
+  <ul>
+    <li><a href="issues/resolved/ISSUE-101-python-314-requires.html">ISSUE-101</a></li>
+    <li><a href="issues/resolved/ISSUE-102-powershell-commit-heredoc.html">ISSUE-102</a></li>
+  </ul>
+</div>
+</body>
+</html>

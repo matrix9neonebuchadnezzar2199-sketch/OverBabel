@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>Phase 1 記録 — 透明オーバーレイ MVP</title>
+  <link rel="stylesheet" href="_shared.css">
+</head>
+<body>
+<div class="wrap">
+  <nav class="top"><a href="index.html">← マスター索引</a> · <a href="design/phase-01-design.md">設計</a></nav>
+  <h1>Phase 1 完了記録</h1>
+  <p class="meta">状態: <span class="badge ok">実装完了</span> · <span class="badge warn">main 未マージ</span> · コミット: <code>41929c5</code></p>
+
+  <h2>設計要約</h2>
+  <div class="card">
+    <ul>
+      <li>プライマリモニタ全画面・フレームレス・最前面・クリックスルー</li>
+      <li>システムトレイ（表示切替 / 終了 / 設定プレースホルダ）</li>
+      <li>グローバルホットキー <code>Ctrl+Alt+T</code>（config.toml で変更可）</li>
+      <li><code>--debug-boxes</code> でモック相当の赤枠ダミー描画</li>
+    </ul>
+    <p>詳細: <a href="design/phase-01-design.md">phase-01-design.md</a></p>
+  </div>
+
+  <h2>実装範囲</h2>
+  <ul>
+    <li><code>overbabel_ui/app.py</code>, <code>overlay/</code>, <code>tray/</code>, <code>hotkey/</code></li>
+    <li><code>overbabel_core/config/loader.py</code>, <code>utils/logging.py</code>, <code>HotkeySettings</code></li>
+    <li><code>tests/unit/test_overlay_smoke.py</code>, <code>test_hotkey_manager.py</code>, <code>test_config_loader.py</code></li>
+  </ul>
+
+  <h2>検証</h2>
+  <ul>
+    <li>ローカル: <code>python -m overbabel_ui.main --debug-boxes</code></li>
+    <li>CI 想定: <code>QT_QPA_PLATFORM=offscreen pytest</code></li>
+    <li>ruff / black / mypy / pytest すべて pass（開発環境 Python 3.14）</li>
+  </ul>
+
+  <h2>Git</h2>
+  <pre>branch: feature/phase-1-overlay
+commit: 41929c5
+remote: origin/feature/phase-1-overlay</pre>
+
+  <h2>未解決・フォロー</h2>
+  <ul>
+    <li><a href="issues/open/ISSUE-001-phase1-not-merged.html">ISSUE-001</a> — main へのマージ待ち</li>
+  </ul>
+
+  <h2>関連課題（解決済み）</h2>
+  <ul>
+    <li><a href="issues/resolved/ISSUE-103-ruff-fullwidth-chars.html">ISSUE-103</a></li>
+    <li><a href="issues/resolved/ISSUE-104-mypy-pyqt-types.html">ISSUE-104</a></li>
+  </ul>
+</div>
+</body>
+</html>

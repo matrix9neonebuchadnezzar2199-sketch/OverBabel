@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>ISSUE-101 — Python 3.14 requires-python</title>
+  <link rel="stylesheet" href="../../_shared.css">
+</head>
+<body>
+<div class="wrap">
+  <nav class="top"><a href="../index.html">← 課題一覧</a></nav>
+  <h1>ISSUE-101 <span class="badge ok">解決済み</span></h1>
+  <p class="meta">Phase 0 · 2026-05-19</p>
+
+  <h2>現象</h2>
+  <div class="card">
+    <pre>ERROR: Package 'overbabel' requires a different Python: 3.14.0 not in '&gt;=3.11,&lt;3.13'</pre>
+    <p>開発 PC に Python 3.11 が無く、<code>py -3.11</code> も失敗。既定の <code>python</code> は 3.14。</p>
+  </div>
+
+  <h2>原因</h2>
+  <p><code>pyproject.toml</code> の <code>requires-python = "&gt;=3.11,&lt;3.13"</code> が 3.14 を拒否。</p>
+
+  <h2>対処</h2>
+  <ul>
+    <li><code>requires-python = "&gt;=3.11"</code> に緩和（CI は引き続き 3.11）。</li>
+    <li>README に「3.11 推奨・CI は 3.11」と明記。</li>
+  </ul>
+
+  <h2>再発防止</h2>
+  <p>本番・配布は Phase 7 で 3.11 固定 venv / PyInstaller を推奨。開発マシンは 3.14 でも editable install 可能にする方針を維持。</p>
+</div>
+</body>
+</html>

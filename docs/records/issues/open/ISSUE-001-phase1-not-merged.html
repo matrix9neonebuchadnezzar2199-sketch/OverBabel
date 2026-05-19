@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>ISSUE-001 — Phase 1 未マージ</title>
+  <link rel="stylesheet" href="../../_shared.css">
+</head>
+<body>
+<div class="wrap">
+  <nav class="top"><a href="../index.html">← 課題一覧</a></nav>
+  <h1>ISSUE-001 <span class="badge bad">未解決</span></h1>
+  <p class="meta">Phase 1 · 登録: 2026-05-19 · 担当: マスター（PR 承認）</p>
+
+  <h2>現象</h2>
+  <div class="card">
+    <p>Phase 1 の実装は <code>feature/phase-1-overlay</code>（コミット <code>41929c5</code>）にのみ存在し、<code>main</code> には未マージのまま。</p>
+    <p>CI のデフォルトブランチが <code>main</code> の場合、Phase 1 のテスト・コードは main 上では再現できない。</p>
+  </div>
+
+  <h2>試したこと</h2>
+  <ul>
+    <li>リモートへ <code>feature/phase-1-overlay</code> を push 済み。</li>
+    <li>PR URL: <a href="https://github.com/matrix9neonebuchadnezzar2199-sketch/OverBabel/pull/new/feature/phase-1-overlay">GitHub で PR 作成</a></li>
+  </ul>
+
+  <h2>ブロッカー</h2>
+  <p>マスターによる PR レビュー / squash merge の判断待ち。</p>
+
+  <h2>次アクション</h2>
+  <ol>
+    <li>PR を作成し CI を確認。</li>
+    <li><code>main</code> へ squash merge。</li>
+    <li>本 Issue を <code>resolved/</code> へ移動し、索引を更新。</li>
+    <li>Phase 2 は <code>main</code> から <code>feature/phase-2-capture-diff</code> を切る。</li>
+  </ol>
+</div>
+</body>
+</html>

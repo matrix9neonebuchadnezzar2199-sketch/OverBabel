@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>ISSUE-103 — ruff 全角記号</title>
+  <link rel="stylesheet" href="../../_shared.css">
+</head>
+<body>
+<div class="wrap">
+  <nav class="top"><a href="../index.html">← 課題一覧</a></nav>
+  <h1>ISSUE-103 <span class="badge ok">解決済み</span></h1>
+  <p class="meta">Phase 1 · 2026-05-19</p>
+
+  <h2>現象</h2>
+  <div class="card">
+    <p><code>ruff check</code> が RUF001 / RUF002 / RUF003 で失敗。コメント・docstring・help 内の全角 <code>＋</code> <code>（）</code> が原因。</p>
+  </div>
+
+  <h2>対処</h2>
+  <ul>
+    <li>コメント・CLI help は ASCII の <code>+</code> <code>()</code> に置換。</li>
+    <li>ユーザー向け表示文言（ゲーム UI ダミー等）の <code>「」</code> はそのまま維持可。</li>
+    <li>デバッグ用 BGM 行のみ <code>(BGMの歌詞)</code> に変更。</li>
+  </ul>
+</div>
+</body>
+</html>

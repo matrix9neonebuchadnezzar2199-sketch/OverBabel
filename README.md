@@ -37,19 +37,24 @@ python -m overbabel_ui.main
 - [アーキテクチャ](docs/architecture.md)
 - [設計仕様書](docs/design-spec.md)
 - [UI モック](docs/mockup.html)
+- [開発ワークフロー](docs/process/workflow.md)
+- [**開発記録マスター索引（HTML）**](docs/records/index.html) — Phase 進捗・障害・未解決の一覧
 
 ## 開発フェーズ
 
-| Phase | 内容 | 状態 |
-| --- | --- | --- |
-| 0 | プロジェクト基盤 | 進行中 |
-| 1 | 透明オーバーレイ MVP | 未着手 |
-| 2 | 画面キャプチャ + 差分検知 | 未着手 |
-| 3 | OCR + 翻訳パイプライン | 未着手 |
-| 4 | 設定 GUI 実装 | 未着手 |
-| 5 | プロセス分離 / gRPC | 未着手 |
-| 6 | 音声字幕パイプライン | 未着手 |
-| 7 | 配布パッケージング | 未着手 |
+各 Phase は **設計 → 実装 → commit & push → HTML 記録** を繰り返す（[workflow.md](docs/process/workflow.md)）。
+
+| Phase | 内容 | 状態 | 記録 |
+| --- | --- | --- | --- |
+| 0 | プロジェクト基盤 | 完了 | [record](docs/records/phase-00-record.html) |
+| 1 | 透明オーバーレイ MVP | 完了（main 未マージ） | [record](docs/records/phase-01-record.html) |
+| 2 | 画面キャプチャ + 差分検知 | 設計済・未実装 | [design](docs/records/design/phase-02-design.md) |
+| 3 | OCR + 翻訳パイプライン | 未着手 | — |
+| 4 | 設定 GUI 実装 | 未着手 | — |
+| 5 | プロセス分離 / gRPC | 未着手 | — |
+| 6 | 音声字幕パイプライン | 未着手 | — |
+| 7 | 配布パッケージング | 未着手 | — |
+| 8+ | 拡張 | バックログ | [backlog](docs/records/design/phase-08-backlog.md) |
 
 ## ライセンス
 

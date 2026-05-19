@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>ISSUE-102 — PowerShell commit heredoc</title>
+  <link rel="stylesheet" href="../../_shared.css">
+</head>
+<body>
+<div class="wrap">
+  <nav class="top"><a href="../index.html">← 課題一覧</a></nav>
+  <h1>ISSUE-102 <span class="badge ok">解決済み</span></h1>
+  <p class="meta">Phase 0 · 2026-05-19</p>
+
+  <h2>現象</h2>
+  <div class="card">
+    <p>Cursor エージェントが bash 形式の <code>git commit -m "$(cat &lt;&lt;'EOF' ...)"</code> を PowerShell で実行し、パーサエラーでコミット失敗。</p>
+  </div>
+
+  <h2>原因</h2>
+  <p>Windows 既定シェルが PowerShell で、bash heredoc 構文が無効。</p>
+
+  <h2>対処</h2>
+  <ul>
+    <li>コミットメッセージを <code>.git/TEMP_COMMIT_MSG.txt</code> に書き、<code>git commit -F</code> で渡す。</li>
+    <li><code>workflow.md</code> に Windows 向け手順を追記済み。</li>
+  </ul>
+</div>
+</body>
+</html>

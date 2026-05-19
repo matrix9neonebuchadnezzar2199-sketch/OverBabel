@@ -7,6 +7,9 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- Development workflow (`docs/process/workflow.md`) and master HTML records (`docs/records/`).
+- Issue tracker HTML (resolved/open) for master review.
+- Phase 0–1 retroactive design docs and completion records; Phase 2 design draft.
 - Phase 0: project scaffolding, CI, linting, type-check, license, docs skeleton.
 - Phase 1: transparent click-through overlay on primary monitor (PyQt6).
 - System tray with overlay toggle / quit, balloon notification on startup.

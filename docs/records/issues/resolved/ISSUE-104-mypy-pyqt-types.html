@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>ISSUE-104 — mypy PyQt6</title>
+  <link rel="stylesheet" href="../../_shared.css">
+</head>
+<body>
+<div class="wrap">
+  <nav class="top"><a href="../index.html">← 課題一覧</a></nav>
+  <h1>ISSUE-104 <span class="badge ok">解決済み</span></h1>
+  <p class="meta">Phase 1 · 2026-05-19</p>
+
+  <h2>現象</h2>
+  <div class="card">
+    <ul>
+      <li><code>tray.py</code>: <code>QCoreApplication</code> に <code>style</code> が無い</li>
+      <li><code>window.py</code>: <code>paintEvent</code> 引数型が QWidget と不一致</li>
+      <li><code>logging.py</code>: <code>get_logger</code> の戻り値型未注釈</li>
+    </ul>
+  </div>
+
+  <h2>対処</h2>
+  <ul>
+    <li><code>isinstance(app, QApplication)</code> で絞り込み</li>
+    <li><code>paintEvent(self, _event: QPaintEvent | None)</code></li>
+    <li><code>get_logger</code> 戻り値を <code>Any</code>（structlog stubs 不足のため）</li>
+  </ul>
+</div>
+</body>
+</html>
