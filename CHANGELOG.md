@@ -1,18 +1,23 @@
 # Changelog
 
-All notable changes to OverBabel will be documented here.
-Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
-
-## [Unreleased]
+## [0.8.0] - 2026-05-19
 
 ### Added
 
-- Development workflow (`docs/process/workflow.md`) and master HTML records (`docs/records/`).
-- Issue tracker HTML (resolved/open) for master review.
-- Phase 0–1 retroactive design docs and completion records; Phase 2 design draft.
-- Phase 0: project scaffolding, CI, linting, type-check, license, docs skeleton.
-- Phase 1: transparent click-through overlay on primary monitor (PyQt6).
-- System tray with overlay toggle / quit, balloon notification on startup.
-- Global hotkey `Ctrl+Alt+T` to toggle overlay (configurable via config.toml).
-- `--debug-boxes` CLI flag to render mock-style red-bordered translation samples.
-- Offscreen smoke tests for overlay / tray / hotkey manager.
+- Phase 2: dxcam capture, frame diff ROIs, bench script, overlay live ROIs.
+- Phase 3: OCR (RapidOCR + stub), translation (Opus-MT + stub), LRU cache.
+- Phase 4: Expanded config schema v2, 11-page settings window.
+- Phase 5: gRPC vision/audio protos, servers, clients, `--use-grpc`.
+- Phase 6: Audio gRPC demo subtitle stream.
+- Phase 7: Onboarding dialog, PyInstaller spec, build script.
+- HTML master records and issue tracker under `docs/records/`.
+
+### Known gaps (see issues)
+
+- ISSUE-002: Real WASAPI + faster-whisper not yet integrated.
+
+## [0.1.0] - 2026-05-19
+
+### Added
+
+- Phase 0–1: project scaffolding and transparent overlay MVP.

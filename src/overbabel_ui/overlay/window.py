@@ -11,6 +11,7 @@ from PyQt6.QtWidgets import QWidget
 
 from overbabel_core.utils import get_logger
 from overbabel_ui.overlay.debug_layer import DebugSample, draw_debug_layer
+from overbabel_ui.overlay.render import labels_to_samples, rois_to_samples
 
 
 class OverlayWindow(QWidget):
@@ -19,7 +20,7 @@ class OverlayWindow(QWidget):
     プライマリモニタの全画面を覆う。マウスとキーは下のアプリへ素通しする。
     """
 
-    def __init__(self, *, debug_boxes: bool = False) -> None:
+    def __init__(self, *, debug_boxes: bool = False, live_mode: bool = False) -> None:
         super().__init__(
             None,
             Qt.WindowType.FramelessWindowHint
@@ -29,6 +30,8 @@ class OverlayWindow(QWidget):
         )
         self._log = get_logger("ui.overlay")
         self._debug_boxes = debug_boxes
+        self._live_mode = live_mode
+        self._samples: list[DebugSample] = []
 
         # 透明 + クリックスルー
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
@@ -65,9 +68,18 @@ class OverlayWindow(QWidget):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
         # ベースは完全透明 (何も塗らない)
-        if self._debug_boxes:
-            samples = self._build_debug_samples()
-            draw_debug_layer(painter, samples)
+        if self._debug_boxes or self._live_mode:
+            samples = self._samples if self._live_mode else self._build_debug_samples()
+            if samples:
+                draw_debug_layer(painter, samples)
+
+    def set_rois(self, rois: list[object]) -> None:
+        self._samples = rois_to_samples(rois)
+        self.update()
+
+    def set_labels(self, labels: list[object]) -> None:
+        self._samples = labels_to_samples(labels)
+        self.update()
 
     def _build_debug_samples(self) -> list[DebugSample]:
         """モック画面と同じ位置関係でダミーラベルを返す。"""

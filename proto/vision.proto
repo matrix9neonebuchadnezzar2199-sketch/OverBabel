@@ -2,10 +2,28 @@ syntax = "proto3";
 
 package overbabel.vision;
 
-// Phase 5: screen capture, OCR, and translation streaming.
-
 service VisionService {
+  rpc StreamTranslations(StreamRequest) returns (stream TranslationBatch);
   rpc ReloadEngine(ReloadEngineRequest) returns (ReloadEngineReply);
+}
+
+message StreamRequest {
+  bool enable_ocr = 1;
+}
+
+message TranslationBatch {
+  repeated TranslationItem items = 1;
+  uint64 frame_id = 2;
+}
+
+message TranslationItem {
+  int32 x = 1;
+  int32 y = 2;
+  int32 w = 3;
+  int32 h = 4;
+  string tag = 5;
+  string text = 6;
+  bool accent = 7;
 }
 
 message ReloadEngineRequest {

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "overbabel"
-version = "0.1.0"
+version = "0.8.0"
 description = "Realtime screen + audio translation overlay powered by local AI."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -23,11 +23,19 @@ dependencies = [
     "tomli-w>=1.0",
     "structlog>=24.1",
     "platformdirs>=4.2",
+    "cachetools>=5.3",
+    "xxhash>=3.4",
 ]
 
 [project.optional-dependencies]
 ui = ["PyQt6>=6.6", "pynput>=1.7"]
-vision = ["dxcam>=0.0.5", "numpy>=1.26", "opencv-python-headless>=4.9", "rapidocr-onnxruntime>=1.3", "onnxruntime>=1.17"]
+vision = [
+    "dxcam>=0.0.5",
+    "numpy>=1.26",
+    "opencv-python-headless>=4.9",
+    "rapidocr-onnxruntime>=1.2.3",
+    "onnxruntime>=1.17",
+]
 translate = ["ctranslate2>=4.0", "sentencepiece>=0.2", "transformers>=4.40", "huggingface-hub>=0.23"]
 audio = ["pyaudiowpatch>=0.2.12.5; sys_platform=='win32'", "faster-whisper>=1.0", "silero-vad>=5.0"]
 ipc = ["grpcio>=1.62", "grpcio-tools>=1.62", "protobuf>=4.25"]
@@ -42,6 +50,8 @@ dev = [
 
 [project.scripts]
 overbabel = "overbabel_ui.main:main"
+overbabel-vision-server = "overbabel_vision.server:main"
+overbabel-audio-server = "overbabel_audio.server:main"
 
 [project.urls]
 Repository = "https://github.com/matrix9neonebuchadnezzar2199-sketch/OverBabel"
@@ -57,6 +67,8 @@ src = ["src", "tests"]
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "B", "UP", "N", "SIM", "RUF"]
 ignore = ["E501"]
+[tool.ruff.lint.per-file-ignores]
+"src/overbabel_core/ipc/*" = ["N802"]
 
 [tool.black]
 line-length = 110
@@ -67,7 +79,7 @@ python_version = "3.11"
 strict = true
 warn_unreachable = true
 ignore_missing_imports = true
-exclude = ["build/", "dist/", ".venv/", "src/overbabel_core/ipc/.*_pb2.*"]
+exclude = ["build/", "dist/", ".venv/", "src/overbabel_core/ipc/"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

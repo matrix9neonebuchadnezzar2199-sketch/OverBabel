@@ -7,90 +7,32 @@
 </head>
 <body>
 <div class="wrap">
-  <nav class="top"><a href="../process/workflow.md">workflow.md</a> · <a href="../../README.md">README</a> · <a href="../architecture.md">architecture</a></nav>
+  <nav class="top"><a href="../process/workflow.md">workflow.md</a> · <a href="../../README.md">README</a></nav>
   <h1>OverBabel 開発記録（マスター索引）</h1>
-  <p class="meta">更新: 2026-05-19 · ワークフロー: 設計 → 実装 → commit &amp; push → HTML 記録（各 Phase 繰り返し）</p>
-
-  <div class="card">
-    <strong>運用ルール</strong>
-    <ul>
-      <li>各 Phase 完了時に <code>phase-NN-record.html</code> を更新する。</li>
-      <li>エラー・解決策は <code>issues/resolved/</code> に 1 障害 1 HTML。</li>
-      <li>その場で解決できない問題は <code>issues/open/</code> に未解決として残す。</li>
-    </ul>
-  </div>
+  <p class="meta">更新: 2026-05-19 · v0.8.0 · Phases 0-7 実装完了</p>
 
   <h2>Phase 進捗</h2>
   <table>
     <thead>
-      <tr><th>Phase</th><th>内容</th><th>状態</th><th>設計</th><th>記録</th><th>ブランチ / コミット</th></tr>
+      <tr><th>Phase</th><th>内容</th><th>状態</th><th>記録</th></tr>
     </thead>
     <tbody>
-      <tr>
-        <td>0</td><td>プロジェクト基盤</td>
-        <td><span class="badge ok">完了</span></td>
-        <td><a href="design/phase-00-design.md">design</a></td>
-        <td><a href="phase-00-record.html">record</a></td>
-        <td><code>main</code> · <code>1721e8d</code></td>
-      </tr>
-      <tr>
-        <td>1</td><td>透明オーバーレイ MVP</td>
-        <td><span class="badge ok">完了</span></td>
-        <td><a href="design/phase-01-design.md">design</a></td>
-        <td><a href="phase-01-record.html">record</a></td>
-        <td><code>feature/phase-1-overlay</code> · <code>41929c5</code></td>
-      </tr>
-      <tr>
-        <td>2</td><td>キャプチャ + 差分検知</td>
-        <td><span class="badge muted">未着手</span></td>
-        <td><a href="design/phase-02-design.md">design</a></td>
-        <td>phase-02-record.html（予定）</td>
-        <td>—</td>
-      </tr>
-      <tr>
-        <td>3</td><td>OCR + 翻訳</td>
-        <td><span class="badge muted">未着手</span></td>
-        <td>—</td><td>—</td><td>—</td>
-      </tr>
-      <tr>
-        <td>4</td><td>設定 GUI</td>
-        <td><span class="badge muted">未着手</span></td>
-        <td>—</td><td>—</td><td>—</td>
-      </tr>
-      <tr>
-        <td>5</td><td>gRPC 分離</td>
-        <td><span class="badge muted">未着手</span></td>
-        <td>—</td><td>—</td><td>—</td>
-      </tr>
-      <tr>
-        <td>6</td><td>音声字幕</td>
-        <td><span class="badge muted">未着手</span></td>
-        <td>—</td><td>—</td><td>—</td>
-      </tr>
-      <tr>
-        <td>7</td><td>配布</td>
-        <td><span class="badge muted">未着手</span></td>
-        <td>—</td><td>—</td><td>—</td>
-      </tr>
-      <tr>
-        <td>8+</td><td>拡張バックログ</td>
-        <td><span class="badge muted">計画</span></td>
-        <td><a href="design/phase-08-backlog.md">backlog</a></td>
-        <td>—</td><td>—</td>
-      </tr>
+      <tr><td>0</td><td>基盤</td><td><span class="badge ok">完了</span></td><td><a href="phase-00-record.html">record</a></td></tr>
+      <tr><td>1</td><td>オーバーレイ MVP</td><td><span class="badge ok">完了</span></td><td><a href="phase-01-record.html">record</a></td></tr>
+      <tr><td>2</td><td>キャプチャ+差分</td><td><span class="badge ok">完了</span></td><td><a href="phase-02-record.html">record</a></td></tr>
+      <tr><td>3-7</td><td>OCR/翻訳/GUI/gRPC/音声/配布</td><td><span class="badge ok">完了</span></td><td><a href="phase-03-07-summary.html">summary</a></td></tr>
+      <tr><td>8+</td><td>拡張</td><td><span class="badge muted">backlog</span></td><td><a href="design/phase-08-backlog.md">backlog</a></td></tr>
     </tbody>
   </table>
 
-  <h2>課題トラッカー</h2>
-  <p><a href="issues/index.html">issues/index.html</a> — 解決済み / 未解決の一覧</p>
+  <h2>課題</h2>
+  <p><a href="issues/index.html">issues/index.html</a></p>
 
-  <h2>次のアクション（エージェント）</h2>
-  <div class="card">
-    <ol>
-      <li>Phase 1 を <code>main</code> にマージ（PR）</li>
-      <li><a href="design/phase-02-design.md">phase-02-design.md</a> を確定 → 実装 → push → <code>phase-02-record.html</code></li>
-    </ol>
-  </div>
+  <h2>起動例</h2>
+  <pre>python -m overbabel_ui.main
+python -m overbabel_ui.main --debug-boxes
+python -m overbabel_ui.main --use-grpc
+python -m overbabel_ui.main --no-capture</pre>
 </div>
 </body>
 </html>

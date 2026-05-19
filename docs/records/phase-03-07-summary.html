@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>Phase 3-7 記録</title>
+  <link rel="stylesheet" href="_shared.css">
+</head>
+<body>
+<div class="wrap">
+  <nav class="top"><a href="index.html">← 索引</a></nav>
+  <h1>Phase 3〜7 完了記録</h1>
+  <p class="meta">v0.8.0 · feature/complete-phases-2-7</p>
+
+  <h2>Phase 3 — OCR + 翻訳</h2>
+  <ul>
+    <li><code>OcrEngine</code> / <code>RapidOcrEngine</code> + <code>StubOcrEngine</code></li>
+    <li><code>Translator</code> / <code>OpusMtTranslator</code> + <code>StubTranslator</code></li>
+    <li><code>TranslationCache</code> (xxhash + cachetools)</li>
+    <li><code>VisionProcessor</code> → オーバーレイ <code>set_labels</code></li>
+  </ul>
+
+  <h2>Phase 4 — 設定 GUI</h2>
+  <ul>
+    <li>拡張 <code>OverBabelConfig</code> (schema v2)</li>
+    <li><code>SettingsWindow</code> — 11 ページ (pages.py)</li>
+    <li>トレイから設定を開く</li>
+  </ul>
+
+  <h2>Phase 5 — gRPC</h2>
+  <ul>
+    <li><code>proto/vision.proto</code> StreamTranslations</li>
+    <li><code>overbabel_vision.server</code> / <code>VisionGrpcClient</code></li>
+    <li><code>--use-grpc</code> で子プロセス起動</li>
+    <li>生成 stub: <code>src/overbabel_core/ipc/*_pb2*</code></li>
+  </ul>
+
+  <h2>Phase 6 — 音声字幕</h2>
+  <ul>
+    <li><code>overbabel_audio.server</code> (デモストリーム)</li>
+    <li><code>AudioGrpcClient</code> → 紫帯オーバーレイ</li>
+  </ul>
+
+  <h2>Phase 7 — 配布</h2>
+  <ul>
+    <li><code>onboarding.py</code> 初回ダイアログ</li>
+    <li><code>overbabel.spec</code> / <code>scripts/build_release.py</code></li>
+    <li>CI: gen_proto + vision/ipc extras</li>
+  </ul>
+
+  <h2>Phase 8+</h2>
+  <p>バックログのみ: <a href="design/phase-08-backlog.md">phase-08-backlog.md</a></p>
+</div>
+</body>
+</html>

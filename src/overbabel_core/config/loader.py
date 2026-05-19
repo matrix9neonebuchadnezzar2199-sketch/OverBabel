@@ -26,6 +26,6 @@ def save_config(config: OverBabelConfig) -> None:
     """Persist configuration to TOML, creating parent directories as needed."""
     path: Path = get_config_path()
     path.parent.mkdir(parents=True, exist_ok=True)
-    payload = config.model_dump(mode="python")
+    payload = config.model_dump(mode="python", exclude_none=True)
     with path.open("wb") as handle:
         tomli_w.dump(payload, handle)

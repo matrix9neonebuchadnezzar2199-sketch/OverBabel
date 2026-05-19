@@ -12,6 +12,7 @@ from PyQt6.QtWidgets import QApplication, QMenu, QStyle, QSystemTrayIcon
 
 class OverBabelTray(QObject):
     toggle_overlay_requested = pyqtSignal()
+    settings_requested = pyqtSignal()
     quit_requested = pyqtSignal()
 
     def __init__(self, parent: QObject | None = None) -> None:
@@ -25,8 +26,8 @@ class OverBabelTray(QObject):
         self._act_toggle.triggered.connect(self.toggle_overlay_requested.emit)
         self._menu.addAction(self._act_toggle)
 
-        self._act_settings = QAction("設定… (Phase 4 で実装)", self._menu)
-        self._act_settings.setEnabled(False)
+        self._act_settings = QAction("設定…", self._menu)
+        self._act_settings.triggered.connect(self.settings_requested.emit)
         self._menu.addAction(self._act_settings)
 
         self._menu.addSeparator()
@@ -52,6 +53,9 @@ class OverBabelTray(QObject):
 
     def set_overlay_state(self, visible: bool) -> None:
         self._act_toggle.setText("オーバーレイを非表示" if visible else "オーバーレイを表示")
+
+    def set_settings_enabled(self, enabled: bool) -> None:
+        self._act_settings.setEnabled(enabled)
 
     # --- internal -------------------------------------------------------
 

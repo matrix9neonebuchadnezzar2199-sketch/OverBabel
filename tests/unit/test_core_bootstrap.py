@@ -12,7 +12,7 @@ from overbabel_core.config import (
 
 
 def test_package_version() -> None:
-    assert overbabel_core.__version__ == "0.1.0"
+    assert overbabel_core.__version__ == "0.8.0"
 
 
 def test_config_paths_are_absolute() -> None:

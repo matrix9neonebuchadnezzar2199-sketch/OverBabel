@@ -46,15 +46,17 @@ python -m overbabel_ui.main
 
 | Phase | 内容 | 状態 | 記録 |
 | --- | --- | --- | --- |
-| 0 | プロジェクト基盤 | 完了 | [record](docs/records/phase-00-record.html) |
-| 1 | 透明オーバーレイ MVP | 完了（main 未マージ） | [record](docs/records/phase-01-record.html) |
-| 2 | 画面キャプチャ + 差分検知 | 設計済・未実装 | [design](docs/records/design/phase-02-design.md) |
-| 3 | OCR + 翻訳パイプライン | 未着手 | — |
-| 4 | 設定 GUI 実装 | 未着手 | — |
-| 5 | プロセス分離 / gRPC | 未着手 | — |
-| 6 | 音声字幕パイプライン | 未着手 | — |
-| 7 | 配布パッケージング | 未着手 | — |
+| 0–1 | 基盤 / オーバーレイ MVP | 完了 | [records](docs/records/index.html) |
+| 2–7 | キャプチャ〜配布 (v0.8.0) | 完了 | [phase 3–7](docs/records/phase-03-07-summary.html) |
 | 8+ | 拡張 | バックログ | [backlog](docs/records/design/phase-08-backlog.md) |
+
+```powershell
+pip install -e ".[dev,ui,vision,ipc]"
+python scripts/gen_proto.py
+python -m overbabel_ui.main --debug-boxes   # ダミー枠
+python -m overbabel_ui.main                 # ライブ OCR+翻訳 (要 dxcam)
+python -m overbabel_ui.main --use-grpc      # 子プロセス + gRPC
+```
 
 ## ライセンス
 
